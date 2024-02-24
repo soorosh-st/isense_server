@@ -1,5 +1,5 @@
 <?php
-
+error_reporting(E_ERROR | E_PARSE);
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
 try {
     $database = new database();
