@@ -27,8 +27,36 @@ class smartKey implements JsonSerializable
 
 
 
+    function readAll($house_name, $user_id, $conn)
+    {
+
+        $house = new house($house_name, $conn, NULL);
+        if (!$house->isUserInHouse($user_id)) {
+            return false;
+        }
+        return $house->getHouseSmartKey();
+    }
+
+    function setKey($house_name, $key, $conn)
+    {
+        $stmt = $conn->prepare("UPDATE smartkey SET key_name = ?, key_status = ?, active_color = ?, deactive_color = ? ,newCommand=1 WHERE key_id = ?");
 
 
+        $stmt->bind_param("sssss", $this->key_name, $this->key_status, $this->active_color, $this->deactive_color, $this->key_id);
+
+        if ($stmt->execute()) {
+            $stmt = $conn->prepare("UPDATE house SET keyChange = 1 WHERE house_name = ?");
+            $stmt->bind_param("s", $house_name);
+
+            if ($stmt->execute()) {
+
+                $stmt->close();
+                return true;
+            }
+        }
+        $stmt->close();
+        return false;
+    }
 
     public function jsonSerialize()
     {

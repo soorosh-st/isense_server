@@ -66,6 +66,103 @@ class house
         $stmt->close();
         $this->conn->close();
     }
+    public function isUserInHouse($user_id)
+    {
+        $stmt = $this->conn->prepare("SELECT users FROM house WHERE house_name = ?");
+        $stmt->bind_param("s", $this->house_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $user_ids_json = $row['users'];
+
+            $user_ids = json_decode($user_ids_json, true);
+
+            if (in_array($user_id, $user_ids)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    public function getHouseScenarios()
+    {
+        $stmt = $this->conn->prepare("SELECT scenarios FROM house WHERE house_name = ?");
+        $stmt->bind_param("s", $this->house_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $scenario_ids_json = $row['scenarios'];
+
+            $scenario_ids = json_decode($scenario_ids_json, true);
+
+            $scenario_list = array();
+            foreach ($scenario_ids as $scenario_id) {
+
+                $scenario_stmt = $this->conn->prepare("SELECT * FROM scenario WHERE scenario_id = ?");
+                $scenario_stmt->bind_param("i", $scenario_id);
+                $scenario_stmt->execute();
+                $scenario_result = $scenario_stmt->get_result();
+
+                if ($scenario_result->num_rows > 0) {
+
+                    $scenario = $scenario_result->fetch_assoc();
+                    $scenario_list[] = $scenario;
+                }
+                $scenario_stmt->close();
+            }
+
+            return $scenario_list;
+        } else {
+            return array();
+        }
+
+
+    }
+
+    public function getHouseSmartKey()
+    {
+        $stmt = $this->conn->prepare("SELECT smartkeys FROM house WHERE house_name = ?");
+        $stmt->bind_param("s", $this->house_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $smartkeys_ids_json = $row['smartkeys'];
+
+            $smartkeys_ids = json_decode($smartkeys_ids_json, true);
+
+            $smartkeys_list = array();
+            foreach ($smartkeys_ids as $smartkeys_id) {
+
+                $smartkeys_stmt = $this->conn->prepare("SELECT * FROM smartkey WHERE key_id = ?");
+                $smartkeys_stmt->bind_param("i", $smartkeys_id);
+                $smartkeys_stmt->execute();
+                $smartkeys_result = $smartkeys_stmt->get_result();
+
+                if ($smartkeys_result->num_rows > 0) {
+
+                    $smartkeys = $smartkeys_result->fetch_assoc();
+                    $smartkeys_list[] = $smartkeys;
+                }
+                $smartkeys_stmt->close();
+            }
+
+            return $smartkeys_list;
+        } else {
+            return array();
+        }
+
+
+    }
+
 
     public function adduser($user_id)
     {

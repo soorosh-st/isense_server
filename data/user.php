@@ -78,7 +78,10 @@ class user
             return $this->getThis();
         else
             return false;
+
     }
+
+
 
     public function checkAccess()
     {
@@ -105,7 +108,7 @@ class user
         }
 
         $stmt->close();
-        $this->conn->close();
+
         return $success;
     }
     private function hasUser($username)
