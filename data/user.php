@@ -25,11 +25,19 @@ class user
         $this->timeout = $timeout;
     }
 
-    public function signin()
+
+
+
+    public function signin($iv)
     {
+
         if (!$this->hasUser($this->username)) {
+
             return false;
         }
+
+        $this->password = $this->decryptAES($this->password, $iv);
+
         $stmt = $this->conn->prepare("SELECT user_name, user_password FROM user WHERE user_name = ?");
         $stmt->bind_param("s", $this->username);
         $stmt->execute();
@@ -43,14 +51,36 @@ class user
             if (password_verify($this->password, $hashedPasswordFromDB)) {
                 $this->username = $row['user_name'];
                 $this->createToken();
+
+                return array("token" => $this->token, "username" => $this->username);
             }
         }
         $stmt->close();
         $this->conn->close();
-        return array("token" => $this->token, "username" => $this->username);
+        return false;
     }
 
+    private function decryptAES($data, $iv)
+    {
+        $key = "feUGSmdz4ih/vxOxOZg506eOnfOgSUP1AHmrCqT8ayg=";
+        $decodedKey = base64_decode($key);
+        $decodedIV = base64_decode($iv);
+        $decodedEncryptedData = base64_decode($data);
+        return openssl_decrypt($decodedEncryptedData, 'aes-256-cbc', $decodedKey, OPENSSL_RAW_DATA, $decodedIV);
+    }
 
+    private function encryptAES($data, $iv)
+    {
+        $key = "feUGSmdz4ih/vxOxOZg506eOnfOgSUP1AHmrCqT8ayg=";
+        $decodedKey = base64_decode($key);
+        $decodedIV = base64_decode($iv);
+
+
+        $encryptedData = openssl_encrypt($data, 'aes-256-cbc', $decodedKey, OPENSSL_RAW_DATA, $decodedIV);
+
+
+        return base64_encode($encryptedData);
+    }
     public function signup()
     {
         $succsess = true;
@@ -108,7 +138,10 @@ class user
         }
 
         $stmt->close();
+        $stmt = $this->conn->prepare("UPDATE user SET lastLogin = now() WHERE user_name = ?");
+        $stmt->bind_param("s", $this->username);
 
+        $stmt->execute();
         return $success;
     }
     private function hasUser($username)
