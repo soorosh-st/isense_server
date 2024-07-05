@@ -65,7 +65,7 @@ class user
     private function getHousesByUserId($user_id)
     {
         $stmt = $this->conn->prepare("
-            SELECT h.house_id, h.house_name, h.scenario, h.keyChange, h.key_firmware_version, h.hardware_revision, h.database_status
+            SELECT h.house_id, h.house_name,h.database_status
             FROM house h
             INNER JOIN join_user_house juh ON h.house_id = juh.house_id
             WHERE juh.user_id = ?
