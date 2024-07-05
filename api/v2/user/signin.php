@@ -30,13 +30,17 @@ if ($result = $user->signin($iv)) {
         array(
             "message" => "Success",
             "token" => $result['token'],
-            "username" => $result['username']
+            "user_name" => $result['username'],
+            "user_id" => $result['id'],
+            "houses" => $result['houses'],
+            "isManager" => $result['isManager']
         )
     );
 } else {
     http_response_code(404);
     echo json_encode(array("message" => "Cant login with provided information"));
 }
+
 
 
 

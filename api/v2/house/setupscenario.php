@@ -19,6 +19,8 @@ foreach ($data->scenarios as $item) {
     $scenarioObject = new scenario(
         $item->key,
         $item->name,
+        $item->src,
+        $item->delay
 
     );
     $arrayOfscenario[] = $scenarioObject;

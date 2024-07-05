@@ -23,7 +23,7 @@ if ($response = $smartkey->readAll($house_name, $user_id, $conn)) {
     http_response_code(200);
 } else {
     echo json_encode(array("Error" => "Data could not be retrived"));
-    http_response_code(400);
+    http_response_code(404);
 }
 
 

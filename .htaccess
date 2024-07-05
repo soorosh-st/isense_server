@@ -4,4 +4,13 @@
     RewriteCond %{REQUEST_FILENAME}.php -f
     RewriteRule ^(.*)$ $1.php [L]
 </IfModule>
+<FilesMatch "\.(html|htm|js|css)$">
+    FileETag None
+    <IfModule mod_headers.c>
+        Header unset ETag
+        Header set Cache-Control "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
+        Header set Pragma "no-cache"
+        Header set Expires "Thu, 01 Jan 1970 00:00:00 GMT"
+    </IfModule>
+</FilesMatch>
 Options -Indexes

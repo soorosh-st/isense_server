@@ -6,10 +6,14 @@ class scenario
     private $key;
     private $name;
     private $isActive;
+    public $src;
+    public $delay;
     private $conn;
 
-    public function __construct($key, $name)
+    public function __construct($key, $name, $src, $delay)
     {
+        $this->delay = $delay;
+        $this->src = $src;
         $this->key = $key;
         $this->name = $name;
         $this->isActive = false;

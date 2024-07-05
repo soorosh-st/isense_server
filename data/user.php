@@ -7,11 +7,8 @@ class user
     private $token;
     private $isManager;
     private $timeout;
-
     private $toekn_timeout;
-
     private $conn;
-
 
 
 
@@ -38,7 +35,7 @@ class user
 
         $this->password = $this->decryptAES($this->password, $iv);
 
-        $stmt = $this->conn->prepare("SELECT user_name, user_password FROM user WHERE user_name = ?");
+        $stmt = $this->conn->prepare("SELECT isManager,user_name, user_password,user_id FROM user WHERE user_name = ?");
         $stmt->bind_param("s", $this->username);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -50,14 +47,40 @@ class user
 
             if (password_verify($this->password, $hashedPasswordFromDB)) {
                 $this->username = $row['user_name'];
-                $this->createToken();
+                $this->isManager = $row['isManager'];
+                $id = $row['user_id'];
 
-                return array("token" => $this->token, "username" => $this->username);
+                $this->createToken();
+                $houses = $this->getHousesByUserId($id);
+
+                return array("token" => $this->token, "username" => $this->username, "isManager" => $this->isManager, "id" => $id, "houses" => $houses);
             }
         }
         $stmt->close();
         $this->conn->close();
         return false;
+    }
+
+
+    private function getHousesByUserId($user_id)
+    {
+        $stmt = $this->conn->prepare("
+            SELECT h.house_id, h.house_name, h.scenario, h.keyChange, h.key_firmware_version, h.hardware_revision, h.database_status
+            FROM house h
+            INNER JOIN join_user_house juh ON h.house_id = juh.house_id
+            WHERE juh.user_id = ?
+        ");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $houses = array();
+        while ($row = $result->fetch_assoc()) {
+            $houses[] = $row;
+        }
+
+        $stmt->close();
+        return $houses;
     }
 
     private function decryptAES($data, $iv)
@@ -81,34 +104,36 @@ class user
 
         return base64_encode($encryptedData);
     }
+
+
+
     public function signup()
     {
-        $succsess = true;
+        $success = true;
         $accessTimeout = NULL;
+        $noTimeLimit = false;
+
         if ($this->hasUser($this->username)) {
             return false;
         }
-        $hashedPassword = password_hash($this->password, PASSWORD_BCRYPT, [
-            'cost' => 11
-        ]);
-        if (!$this->isManager)
+
+        $hashedPassword = password_hash($this->password, PASSWORD_BCRYPT, ['cost' => 11]);
+
+        if ($this->timeout == -1) {
+            $accessTimeout = null;
+            $noTimeLimit = true;
+        } else if (!$this->isManager) {
             $accessTimeout = date('Y-m-d H:i:s', strtotime('+' . $this->timeout . ' days'));
-
-
-        $stmt = $this->conn->prepare("INSERT INTO user (user_name,  user_password, isManager, access_timeout) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $this->username, $hashedPassword, $this->isManager, $accessTimeout);
-        if ($stmt->execute() === TRUE) {
-            $succsess = $this;
-        } else {
-            $succsess = false;
         }
-        $stmt->close();
-        $this->conn->close();
-        if ($succsess)
-            return $this->getThis();
-        else
-            return false;
 
+        $stmt = $this->conn->prepare("INSERT INTO user (user_name, user_password, isManager, access_timeout, noTimeLimit) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $this->username, $hashedPassword, $this->isManager, $accessTimeout, $noTimeLimit);
+
+        if ($stmt->execute() === TRUE) {
+            return $this->conn->insert_id;
+        } else {
+            return false;
+        }
     }
 
 
@@ -116,7 +141,7 @@ class user
     public function checkAccess()
     {
         $success = true;
-        $stmt = $this->conn->prepare("SELECT isManager, access_timeout, token_timeout FROM user WHERE user_name = ? AND user_token = ?");
+        $stmt = $this->conn->prepare("SELECT noTimeLimit,isManager, access_timeout, token_timeout FROM user WHERE user_name = ? AND user_token = ?");
         $stmt->bind_param("ss", $this->username, $this->token);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -126,8 +151,9 @@ class user
             $isManager = $row['isManager'];
             $accessTimeout = strtotime($row['access_timeout']);
             $tokenTimeout = strtotime($row['token_timeout']);
+            $noTimeLimit = $row['noTimeLimit'];
             $currentTime = time();
-            if (!$isManager && $accessTimeout < $currentTime) {
+            if (!$isManager && $accessTimeout < $currentTime && !$noTimeLimit) {
                 $success = false;
             }
             if ($tokenTimeout < $currentTime) {

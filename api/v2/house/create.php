@@ -7,25 +7,23 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 
 $data = json_decode(file_get_contents("php://input"));
-
-
-$userToadd = filter_var($data->userToadd, FILTER_SANITIZE_STRING);
-$id = filter_var($data->house_id, FILTER_SANITIZE_STRING);
-
-if (!$userToadd || !$id) {
+$name = filter_var($data->name, FILTER_SANITIZE_STRING);
+//$key_firmware_version = filter_var($data->key_firmware_version, FILTER_SANITIZE_STRING);
+//$hardware_revision = filter_var($data->hardware_revision, FILTER_SANITIZE_NUMBER_INT);
+if (!$name) {
     http_response_code(400);
     echo json_encode(array("message" => "Not enough information"));
     die();
 }
 
-$house = new house(NULL, $conn, $id);
-$result = $house->adduser($userToadd);
-if ($result['success']) {
+$house = new house($name, $conn, NULL);
+
+if ($house->create()) {
     http_response_code(200);
-    echo json_encode(array("message" => $result['message']));
+    echo json_encode(array("message" => "House created"));
 } else {
     http_response_code(409);
-    echo json_encode(array("message" => $result['message']));
+    echo json_encode(array("message" => "Cant create the House"));
 }
 
 ?>

@@ -18,52 +18,44 @@ class house
         $this->conn = $conn;
     }
 
-    public function addscenario($arrayOfscenario)
+    public function addScenario($arrayOfScenario)
     {
         $lastInsertedIds = [];
-        foreach ($arrayOfscenario as $scenario) {
-            $scenario_id = NULL;
+        foreach ($arrayOfScenario as $scenario) {
+            $scenarioId = NULL;
             $id = $scenario->getKey();
-            $stmt_check = $this->conn->prepare("SELECT scenario_id  FROM scenario WHERE scenario_code = ?");
+            $stmt_check = $this->conn->prepare("SELECT scenario_id FROM scenario WHERE scenario_code = ?");
             $stmt_check->bind_param("s", $id);
             $stmt_check->execute();
             $stmt_check->store_result();
-            $stmt_check->bind_result($scenario_id);
-            if ($stmt_check->num_rows == 0) {
-                $stmt = $this->conn->prepare("INSERT INTO scenario (scenario_name,scenario_code,isActive) VALUES (?, ?, ?)");
+            $stmt_check->bind_result($scenarioId);
 
-                $keyId = $scenario->getKey();
-                $keyName = $scenario->getName();
-                $isActive = 0;
+            if ($stmt_check->num_rows == 0) {
+                $stmt = $this->conn->prepare("INSERT INTO scenario (scenario_name, scenario_code, scenario_img, scenario_delay, house_id) VALUES (?, ?, ?, ?, ?)");
+
+                $scenarioName = $scenario->getName();
+                $scenarioCode = $scenario->getKey();
+                $scenarioImg = $scenario->src; // Assuming this is to be provided or can be set to a default value
+                $scenarioDelay = $scenario->delay; // Assuming this is to be provided or can be set to a default value
+                $houseId = $this->house_id;
+
+
                 $stmt->bind_param(
-                    "ssi",
-                    $keyName,
-                    $keyId,
-                    $isActive
+                    "sssis",
+                    $scenarioName,
+                    $scenarioCode,
+                    $scenarioImg,
+                    $scenarioDelay,
+                    $houseId
                 );
                 $stmt->execute();
                 $lastInsertedIds[] = $this->conn->insert_id;
                 $stmt->close();
-            } else {
-
-                $stmt_check->fetch();
-                $lastInsertedIds[] = $scenario_id;
             }
 
+            $stmt_check->close();
         }
 
-
-
-
-
-
-
-        $Json = json_encode($lastInsertedIds);
-
-        $stmt = $this->conn->prepare("UPDATE house SET scenarios = ? WHERE house_id = ?");
-        $stmt->bind_param("ss", $Json, $this->house_id);
-        $stmt->execute();
-        $stmt->close();
         $this->conn->close();
     }
     public function isUserInHouse($user_id)
@@ -88,6 +80,49 @@ class house
             return false;
         }
     }
+    public function isUserAdminInHouse($user_id)
+    {
+        // Check if user is an admin
+        $stmt = $this->conn->prepare("SELECT isManager FROM user WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $isManager = $row['isManager'];
+            if ($isManager != 1) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        // Check if user is part of the house
+        $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $user_id, $this->house_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->num_rows > 0;
+    }
+    public function getHouseUsers($requested_user)
+    {
+        $stmt = $this->conn->prepare("SELECT user.user_id, user.user_name, user.access_timeout, user.lastLogin 
+                                  FROM user 
+                                  JOIN join_user_house ON user.user_id = join_user_house.user_id 
+                                  WHERE join_user_house.house_id = ?");
+        $stmt->bind_param("i", $this->house_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $user_list = array();
+        while ($row = $result->fetch_assoc()) {
+            if ($row['user_id'] != $requested_user) {
+                $user_list[] = $row;
+            }
+        }
+        return $user_list;
+    }
 
     public function getHouseScenarios()
     {
@@ -105,7 +140,7 @@ class house
             $scenario_list = array();
             foreach ($scenario_ids as $scenario_id) {
 
-                $scenario_stmt = $this->conn->prepare("SELECT * FROM scenario WHERE scenario_id = ?");
+                $scenario_stmt = $this->conn->prepare("SELECT scenario_name,scenario_code,scenario_img,scenario_delay FROM scenario WHERE scenario_id = ?");
                 $scenario_stmt->bind_param("i", $scenario_id);
                 $scenario_stmt->execute();
                 $scenario_result = $scenario_stmt->get_result();
@@ -162,100 +197,134 @@ class house
 
 
     }
-
-
-    public function adduser($user_id)
+    public function getHouseRelays()
     {
-        $stmt = $this->conn->prepare("SELECT users FROM house WHERE house_id = ?");
-        $stmt->bind_param("s", $this->house_id);
+        $stmt = $this->conn->prepare("SELECT smartRelays FROM house WHERE house_name = ?");
+        $stmt->bind_param("s", $this->house_name);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $existing_users = json_decode($row['users'], true);
-            if ($existing_users == NULL)
-                $existing_users = array();
+            $smartRelays_ids_json = $row['smartRelays'];
 
-            if (!in_array($user_id, $existing_users)) {
-                $existing_users[] = $user_id;
+            $smartRelays_ids = json_decode($smartRelays_ids_json, true);
 
-                $updated_users = json_encode($existing_users);
+            $smartkeys_list = array();
+            foreach ($smartRelays_ids as $smartRelay_id) {
 
-                $update_stmt = $this->conn->prepare("UPDATE house SET users = ? WHERE house_id = ?");
-                $update_stmt->bind_param("ss", $updated_users, $this->house_id);
-                $update_success = $update_stmt->execute();
-                $update_stmt->close();
+                $smartrelay_stmt = $this->conn->prepare("SELECT * FROM smartrelay WHERE smart_relay_id = ?");
+                $smartrelay_stmt->bind_param("i", $smartRelay_id);
+                $smartrelay_stmt->execute();
+                $smartrelays_result = $smartrelay_stmt->get_result();
 
-                if ($update_success) {
-                    return array("success" => true, "message" => "User added to the house successfully");
-                } else {
-                    return array("success" => false, "message" => "Failed to update users in the house");
+                if ($smartrelays_result->num_rows > 0) {
+
+                    $smartRelays = $smartrelays_result->fetch_assoc();
+                    $smartrelays_list[] = $smartRelays;
                 }
-            } else {
-                return array("success" => false, "message" => "User is already in the house");
+                $smartrelay_stmt->close();
             }
+
+            return $smartrelays_list;
         } else {
-            return array("success" => false, "message" => "House not found");
+            return array();
         }
     }
-    public function removeUserFromHouse($user_id)
+
+    public function readAllUser($user_id)
+    {
+        if (!$this->isUserAdminInHouse($user_id)) {
+            return false;
+        }
+        return $this->getHouseUsers($user_id);
+    }
+    public function adduser($user)
     {
 
-        $stmt = $this->conn->prepare("SELECT users FROM house WHERE house_id = ?");
-        $stmt->bind_param("s", $this->house_id);
+        $user_id = -1;
+        if (!$user_id = $user->signup()) {
+            return array("success" => false, "message" => "Failed to create user");
+        }
+
+        // Insert the relationship into join_user_house table
+        $stmt = $this->conn->prepare("INSERT INTO join_user_house (user_id, house_id) VALUES (?, ?)");
+        $stmt->bind_param("ii", $user_id, $this->house_id);
+
+        if ($stmt->execute()) {
+            return array("success" => true, "message" => "User added to the house successfully");
+        } else {
+            return array("success" => false, "message" => "Failed to add user to the house");
+        }
+    }
+    public function removeUserFromHouse($user_id, $admin_user_id)
+    {
+        // Check if admin_user_id is an admin
+        $stmt = $this->conn->prepare("SELECT isManager FROM user WHERE user_id = ?");
+        $stmt->bind_param("i", $admin_user_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $existing_users = json_decode($row['users'], true);
-
-
-            $index = array_search($user_id, $existing_users);
-            if ($index !== false) {
-
-                unset($existing_users[$index]);
-
-
-                $existing_users = array_values($existing_users);
-
-
-                $updated_users = json_encode($existing_users);
-
-
-                $update_stmt = $this->conn->prepare("UPDATE house SET users = ? WHERE house_id = ?");
-                $update_stmt->bind_param("ss", $updated_users, $this->house_id);
-                $update_success = $update_stmt->execute();
-                $update_stmt->close();
-
-                if ($update_success) {
-                    return array("success" => true, "message" => "User removed to the house successfully");
-                } else {
-                    return array("success" => false, "message" => "Failed to update users in the house");
-                }
-            } else {
-                return array("success" => false, "message" => "User is not in the house");
+            if ($row['isManager'] != 1) {
+                return array("success" => false, "message" => "Admin user is not an admin", "code" => 401);
             }
         } else {
-            return array("success" => false, "message" => "House not found");
+            return array("success" => false, "message" => "Admin user not found", "code" => 404);
         }
 
+        // Check if admin_user_id is part of the house
+        $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $admin_user_id, $this->house_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
+        if ($result->num_rows == 0) {
+            return array("success" => false, "message" => "Admin user is not part of this house", "code" => 401);
+        }
+
+        // Check if user_id is part of the house
+        $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $user_id, $this->house_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows == 0) {
+            return array("success" => false, "message" => "User is not part of this house", "code" => 404);
+        }
+
+        // Remove user_id from the house
+        $stmt = $this->conn->prepare("DELETE FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $user_id, $this->house_id);
+
+        if ($stmt->execute()) {
+            // Optionally delete the user from the user table if needed
+            $delete_user_stmt = $this->conn->prepare("DELETE FROM user WHERE user_id = ?");
+            $delete_user_stmt->bind_param("i", $user_id);
+            $delete_user_stmt->execute();
+
+            return array("success" => true, "message" => "User removed from the house successfully", "code" => 200);
+        } else {
+            return array("success" => false, "message" => "Failed to remove user from the house", "code" => 500);
+        }
     }
+
 
     public function addKey($arrayOfSmartKeys)
     {
         foreach ($arrayOfSmartKeys as $smartKey) {
             $id = $smartKey->getKeyId();
-            $stmt_check = $this->conn->prepare("SELECT key_id FROM smartkey WHERE key_id = ?");
-            $stmt_check->bind_param("i", $id);
+            $stmt_check = $this->conn->prepare("SELECT key_id FROM smartkey WHERE key_uid = ?");
+            $stmt_check->bind_param("s", $id);
             $stmt_check->execute();
             $stmt_check->store_result();
+
             if ($stmt_check->num_rows == 0) {
-                $stmt = $this->conn->prepare("INSERT INTO smartkey (key_id, key_name, key_status, active_color, deactive_color, firmware_version, key_model, newCommand) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->conn->prepare("INSERT INTO smartkey (key_uid, house_id, key_name, key_status, active_color, deactive_color, firmware_version, key_model, newCommand) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                 $keyId = $smartKey->getKeyId();
+                $houseId = $this->house_id; // Assign the house_id to the smart key
                 $keyName = $smartKey->getKeyName();
                 $keyStatus = $smartKey->getKeyStatus();
                 $activeColor = $smartKey->getActiveColor();
@@ -265,8 +334,9 @@ class house
                 $newCommand = $smartKey->isNewCommand() ? 1 : 0;
 
                 $stmt->bind_param(
-                    "issssssi",
+                    "sissssssi",
                     $keyId,
+                    $houseId,
                     $keyName,
                     $keyStatus,
                     $activeColor,
@@ -278,6 +348,38 @@ class house
                 $stmt->execute();
                 $stmt->close();
             }
+        }
+
+        $this->conn->close();
+    }
+    public function addRelay($arrayofRelays)
+    {
+        foreach ($arrayofRelays as $smartRelay) {
+            $id = $smartRelay->getSmartRelayID();
+            $stmt_check = $this->conn->prepare("SELECT smart_relay_id  FROM smartrelay WHERE smart_relay_id  = ?");
+            $stmt_check->bind_param("i", $id);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+            if ($stmt_check->num_rows == 0) {
+                $stmt = $this->conn->prepare("INSERT INTO smartrelay (smart_relay_id , smart_relay_status, smart_relay_count, firmware_version) VALUES (?, ?, ?, ?)");
+
+                $relayId = $smartRelay->getSmartRelayID();
+                $relayStatus = $smartRelay->getSmartRelayStatus();
+                $relayCount = $smartRelay->getSmartRelayCount();
+                $relayFirmware = $smartRelay->getFirmwareVersion();
+
+
+                $stmt->bind_param(
+                    "ssis",
+                    $relayId,
+                    $relayStatus,
+                    $relayCount,
+                    $relayFirmware,
+
+                );
+                $stmt->execute();
+                $stmt->close();
+            }
 
         }
 
@@ -285,24 +387,22 @@ class house
 
 
         $lastInsertedIds = [];
-        foreach ($arrayOfSmartKeys as $smartKey) {
-            $lastInsertedIds[] = $smartKey->getKeyId();
+        foreach ($arrayofRelays as $smartRelay) {
+            $lastInsertedIds[] = $smartRelay->getSmartRelayID();
         }
 
 
         $smartKeysJson = json_encode($lastInsertedIds);
 
-        $stmt = $this->conn->prepare("UPDATE house SET smartkeys = ? WHERE house_id = ?");
+        $stmt = $this->conn->prepare("UPDATE house SET smartRelays = ? WHERE house_id = ?");
         $stmt->bind_param("ss", $smartKeysJson, $this->house_id);
         $stmt->execute();
 
         $stmt->close();
         $this->conn->close();
-
     }
 
-
-    public function create($key_firmware_version)
+    public function create()
     {
         $stmtCheck = $this->conn->prepare("SELECT * FROM house WHERE house_name=?");
         $stmtCheck->bind_param("s", $this->house_name);
@@ -311,12 +411,9 @@ class house
         if (!$stmtCheck->num_rows == 0) {
             return false;
         }
-
-        $stmt = $this->conn->prepare("INSERT INTO house (house_name, keyChange,scenarioChange,key_firmware_version) VALUES (?, ?,?,?)");
-
-        $keyChange = false;
-        $scenarioChange = false;
-        $stmt->bind_param("siis", $this->house_name, $keyChange, $scenarioChange, $key_firmware_version);
+        $database_status = "Available";
+        $stmt = $this->conn->prepare("INSERT INTO house (house_name,key_firmware_version,hardware_revision,database_status) VALUES (?,?,?,?)");
+        $stmt->bind_param("ss", $this->house_name, $database_status);
         $success = $stmt->execute();
         $stmt->close();
         $this->conn->close();
