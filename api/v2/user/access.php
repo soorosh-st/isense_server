@@ -6,7 +6,6 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/data/user.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $data = json_decode(file_get_contents("php://input"));
-$username = filter_var($data->username, FILTER_SANITIZE_STRING);
 $token;
 $headers = getallheaders();
 
@@ -33,7 +32,7 @@ if (!$username) {
     die();
 }
 
-$user = new user($conn, $username, NULL, true, NULL, $token);
+$user = new user($conn, NULL, NULL, true, NULL, $token);
 
 
 if ($user->checkAccess()) {

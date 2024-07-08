@@ -141,7 +141,7 @@ class user
     public function checkAccess()
     {
         $success = true;
-        $stmt = $this->conn->prepare("SELECT noTimeLimit,isManager, access_timeout, token_timeout FROM user WHERE user_name = ? AND user_token = ?");
+        $stmt = $this->conn->prepare("SELECT noTimeLimit,isManager, access_timeout, token_timeout FROM user WHERE user_token = ?");
         $stmt->bind_param("ss", $this->username, $this->token);
         $stmt->execute();
         $result = $stmt->get_result();
