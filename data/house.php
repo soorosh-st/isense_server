@@ -321,7 +321,7 @@ class house
             $stmt_check->store_result();
 
             if ($stmt_check->num_rows == 0) {
-                $stmt = $this->conn->prepare("INSERT INTO smartkey (key_uid, house_id, key_name, key_status, active_color, deactive_color, firmware_version, key_model, newCommand) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->conn->prepare("INSERT INTO smartkey (key_uid, house_id, key_name, key_status, active_color, deactive_color, key_model, newCommand) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
                 $keyId = $smartKey->getKeyId();
                 $houseId = $this->house_id; // Assign the house_id to the smart key
@@ -329,19 +329,17 @@ class house
                 $keyStatus = $smartKey->getKeyStatus();
                 $activeColor = $smartKey->getActiveColor();
                 $deactiveColor = $smartKey->getDeactiveColor();
-                $firmwareVersion = $smartKey->getFirmwareVersion();
                 $keyModel = $smartKey->getKeyModel();
                 $newCommand = $smartKey->isNewCommand() ? 1 : 0;
 
                 $stmt->bind_param(
-                    "sissssssi",
+                    "sisssssi",
                     $keyId,
                     $houseId,
                     $keyName,
                     $keyStatus,
                     $activeColor,
                     $deactiveColor,
-                    $firmwareVersion,
                     $keyModel,
                     $newCommand
                 );

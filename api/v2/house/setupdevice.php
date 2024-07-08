@@ -22,7 +22,7 @@ foreach ($data->smartKeys as $item) {
         $item->key_status,
         $item->active_color,
         $item->deactive_color,
-        $item->firmware_version,
+        NULL,
         $item->key_model,
         $newCommand
     );
