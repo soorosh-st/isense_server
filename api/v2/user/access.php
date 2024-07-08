@@ -22,7 +22,7 @@ if ($headers['Authorization']) {
 } else {
     // Missing token
     http_response_code(401);
-    echo json_encode(['error' => 'Miissing token']);
+    echo json_encode(['error' => 'Missing token']);
     die();
 }
 

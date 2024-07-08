@@ -7,18 +7,33 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/data/house.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $data = json_decode(file_get_contents("php://input"));
-$user_id = filter_var($data->user_id, FILTER_SANITIZE_STRING);
-$house_name = filter_var($data->house_name, FILTER_SANITIZE_STRING);
+$house_id = filter_var($data->house_id, FILTER_SANITIZE_STRING);
+$token;
+$headers = getallheaders();
+if ($headers['Authorization']) {
 
-if (!$user_id || !$house_name) {
+    $authHeader = $headers['Authorization'];
+    list($type, $token) = explode(' ', $authHeader);
+    if ($type != 'Bearer') {
+        http_response_code(401);
+        echo json_encode(['error' => 'Invalid token']);
+        die();
+    }
+} else {
+    // Missing token
+    http_response_code(401);
+    echo json_encode(['error' => 'Missing token']);
+    die();
+}
+if (!$house_id) {
     http_response_code(400);
     echo json_encode(array("message" => "Not enough information"));
     die();
 }
 
 
-$scenario = new scenario(NULL, NULL);
-if ($response = $scenario->readAll($house_name, $user_id, $conn)) {
+$scenario = new scenario(NULL, NULL, NULL, NULL, NULL);
+if ($response = $scenario->readAll($house_id, $token, $conn)) {
     echo json_encode($response);
     http_response_code(200);
 } else {

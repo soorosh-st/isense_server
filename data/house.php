@@ -58,26 +58,39 @@ class house
 
         $this->conn->close();
     }
-    public function isUserInHouse($user_id)
+    public function isUserInHouse($user_token)
     {
-        $stmt = $this->conn->prepare("SELECT users FROM house WHERE house_name = ?");
-        $stmt->bind_param("s", $this->house_name);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        // Step 1: Verify the user based on the provided user_token
+        $stmt_user = $this->conn->prepare("SELECT user_id, token_timeout FROM user WHERE user_token = ?");
+        $stmt_user->bind_param("s", $user_token);
+        $stmt_user->execute();
+        $result_user = $stmt_user->get_result();
 
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $user_ids_json = $row['users'];
+        if ($result_user->num_rows > 0) {
+            $user_data = $result_user->fetch_assoc();
+            $user_id = $user_data['user_id'];
+            $token_timeout = $user_data['token_timeout'];
 
-            $user_ids = json_decode($user_ids_json, true);
+            // Step 2: Check if the token is valid
+            if (time() < strtotime($token_timeout)) {
+                // Step 3: Check if the user is part of the house
+                $stmt_house = $this->conn->prepare("SELECT * FROM join_user_house WHERE user_id = ? AND house_id = ?");
+                $stmt_house->bind_param("ii", $user_id, $this->house_id);
+                $stmt_house->execute();
+                $result_house = $stmt_house->get_result();
 
-            if (in_array($user_id, $user_ids)) {
-                return true;
+                if ($result_house->num_rows > 0) {
+                    return array("success" => true, "message" => "This user is in this house", "code" => 200);
+                } else {
+                    return array("success" => false, "message" => "This user is has no access to the house", "code" => 403);
+                }
             } else {
-                return false;
+                // Token is expired
+                return array("success" => false, "message" => "User token expired", "code" => 401);
             }
         } else {
-            return false;
+            // User not found
+            return array("success" => false, "message" => "Specified user did not found", "code" => 404);
         }
     }
     public function isUserAdminInHouse($user_id)
@@ -126,39 +139,17 @@ class house
 
     public function getHouseScenarios()
     {
-        $stmt = $this->conn->prepare("SELECT scenarios FROM house WHERE house_name = ?");
-        $stmt->bind_param("s", $this->house_name);
+        $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_img, scenario_delay FROM scenario WHERE house_id = ?");
+        $stmt->bind_param("s", $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $scenario_ids_json = $row['scenarios'];
-
-            $scenario_ids = json_decode($scenario_ids_json, true);
-
-            $scenario_list = array();
-            foreach ($scenario_ids as $scenario_id) {
-
-                $scenario_stmt = $this->conn->prepare("SELECT scenario_name,scenario_code,scenario_img,scenario_delay FROM scenario WHERE scenario_id = ?");
-                $scenario_stmt->bind_param("i", $scenario_id);
-                $scenario_stmt->execute();
-                $scenario_result = $scenario_stmt->get_result();
-
-                if ($scenario_result->num_rows > 0) {
-
-                    $scenario = $scenario_result->fetch_assoc();
-                    $scenario_list[] = $scenario;
-                }
-                $scenario_stmt->close();
-            }
-
-            return $scenario_list;
-        } else {
-            return array();
+        $scenarios = [];
+        while ($row = $result->fetch_assoc()) {
+            $scenarios[] = $row;
         }
 
-
+        return $scenarios;
     }
 
     public function getHouseSmartKey()
