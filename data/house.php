@@ -147,9 +147,9 @@ class house
         $scenarios = [];
         while ($row = $result->fetch_assoc()) {
             // Modify scenario_img based on theme
-            if ($theme == "Blue") {
+            if ($theme == "blue") {
                 $row['scenario_img'] .= "_blue.svg";
-            } elseif ($theme == "Red") {
+            } elseif ($theme == "red") {
                 $row['scenario_img'] .= ".svg";
             }
 
