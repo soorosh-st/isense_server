@@ -27,34 +27,35 @@ class smartKey implements JsonSerializable
 
 
 
-    function readAll($house_name, $user_id, $conn)
+    function readAll($house_id, $token, $conn)
     {
-
-        $house = new house($house_name, $conn, NULL);
-        if (!$house->isUserInHouse($user_id)) {
+        $house = new house(NULL, $conn, $house_id);
+        if (!$house->isUserInHouse($token)) {
             return false;
         }
         return $house->getHouseSmartKey();
     }
 
-    function setKey($house_name, $key, $conn)
+    function setKey($house_id, $key, $conn)
     {
-        $stmt = $conn->prepare("UPDATE smartkey SET key_name = ?, key_status = ?, active_color = ?, deactive_color = ? ,newCommand=1 WHERE key_id = ?");
+        $stmt = $conn->prepare("UPDATE smartkey SET  key_status = ?, active_color = ?, deactive_color = ? , newCommand = 1 WHERE key_id = ?");
 
-        $stmt->bind_param("sssss", $this->key_name, $this->key_status, $this->active_color, $this->deactive_color, $this->key_id);
-
-        if ($stmt->execute()) {
-            $stmt = $conn->prepare("UPDATE house SET keyChange = 1 WHERE house_name = ?");
-            $stmt->bind_param("s", $house_name);
-
-            if ($stmt->execute()) {
-
-                $stmt->close();
-                return true;
-            }
+        $stmt->bind_param("ssss", $this->key_status, $this->active_color, $this->deactive_color, $this->key_id);
+        $stmt->execute();
+        if ($stmt->affected_rows === 0) {
+            $stmt->close();
+            return false;
         }
-        $stmt->close();
-        return false;
+        $stmt = $conn->prepare("UPDATE house SET keyChange = 1 WHERE house_id = ?");
+        $stmt->bind_param("s", $house_id);
+        $stmt->execute();
+        if ($stmt->affected_rows === 0) {
+            $stmt->close();
+            return false;
+        }
+
+        return true;
+
     }
 
     public function jsonSerialize()

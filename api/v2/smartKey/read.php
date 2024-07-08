@@ -7,10 +7,26 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/data/house.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $data = json_decode(file_get_contents("php://input"));
-$user_id = filter_var($data->user_id, FILTER_SANITIZE_STRING);
-$house_name = filter_var($data->house_name, FILTER_SANITIZE_STRING);
 
-if (!$user_id || !$house_name) {
+$house_id = filter_var($data->house_id, FILTER_SANITIZE_STRING);
+$token;
+$headers = getallheaders();
+if ($headers['Authorization']) {
+
+    $authHeader = $headers['Authorization'];
+    list($type, $token) = explode(' ', $authHeader);
+    if ($type != 'Bearer') {
+        http_response_code(401);
+        echo json_encode(['Message' => 'Invalid token']);
+        die();
+    }
+} else {
+    // Missing token
+    http_response_code(401);
+    echo json_encode(['Message' => 'Missing token']);
+    die();
+}
+if (!$house_id) {
     http_response_code(400);
     echo json_encode(array("message" => "Not enough information"));
     die();
@@ -18,7 +34,7 @@ if (!$user_id || !$house_name) {
 
 
 $smartkey = new smartkey(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-if ($response = $smartkey->readAll($house_name, $user_id, $conn)) {
+if ($response = $smartkey->readAll($house_id, $token, $conn)) {
     echo json_encode($response);
     http_response_code(200);
 } else {

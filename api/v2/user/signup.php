@@ -19,7 +19,7 @@ if (isset($data->timeout))
 
 if (!$username || !$password) {
     http_response_code(400);
-    echo json_encode(array("message" => "Not enough information"));
+    echo json_encode(array("Message" => "Not enough information"));
     die();
 }
 
@@ -33,7 +33,7 @@ if ($reslut = $user->signup()) {
     echo json_encode($reslut);
 } else {
     http_response_code(409);
-    echo json_encode(array("message" => "Cant create the user"));
+    echo json_encode(array("Message" => "Cant create the user"));
 }
 
 ?>

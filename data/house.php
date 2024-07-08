@@ -162,39 +162,20 @@ class house
 
     public function getHouseSmartKey()
     {
-        $stmt = $this->conn->prepare("SELECT smartkeys FROM house WHERE house_name = ?");
-        $stmt->bind_param("s", $this->house_name);
+        $stmt = $this->conn->prepare("SELECT * FROM smartkey WHERE house_id = ?");
+        $stmt->bind_param("s", $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
+        $smartKeys = [];
         if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $smartkeys_ids_json = $row['smartkeys'];
-
-            $smartkeys_ids = json_decode($smartkeys_ids_json, true);
-
-            $smartkeys_list = array();
-            foreach ($smartkeys_ids as $smartkeys_id) {
-
-                $smartkeys_stmt = $this->conn->prepare("SELECT * FROM smartkey WHERE key_id = ?");
-                $smartkeys_stmt->bind_param("i", $smartkeys_id);
-                $smartkeys_stmt->execute();
-                $smartkeys_result = $smartkeys_stmt->get_result();
-
-                if ($smartkeys_result->num_rows > 0) {
-
-                    $smartkeys = $smartkeys_result->fetch_assoc();
-                    $smartkeys_list[] = $smartkeys;
-                }
-                $smartkeys_stmt->close();
+            while ($row = $result->fetch_assoc()) {
+                $smartKeys[] = $row;
             }
-
-            return $smartkeys_list;
-        } else {
-            return array();
         }
 
-
+        $stmt->close();
+        return $smartKeys;
     }
     public function getHouseRelays()
     {

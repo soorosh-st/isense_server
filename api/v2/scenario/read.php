@@ -17,18 +17,18 @@ if ($headers['Authorization']) {
     list($type, $token) = explode(' ', $authHeader);
     if ($type != 'Bearer') {
         http_response_code(401);
-        echo json_encode(['error' => 'Invalid token']);
+        echo json_encode(['Message' => 'Invalid token']);
         die();
     }
 } else {
     // Missing token
     http_response_code(401);
-    echo json_encode(['error' => 'Missing token']);
+    echo json_encode(['Message' => 'Missing token']);
     die();
 }
 if (!$house_id || !$theme) {
     http_response_code(400);
-    echo json_encode(array("message" => "Not enough information"));
+    echo json_encode(array("Message" => "Not enough information"));
     die();
 }
 
@@ -38,7 +38,7 @@ if ($response = $scenario->readAll($house_id, $token, $conn, $theme)) {
     echo json_encode($response);
     http_response_code(200);
 } else {
-    echo json_encode(array("Error" => "Data could not be retrived"));
+    echo json_encode(array("Message" => "Data could not be retrived"));
     http_response_code(400);
 }
 

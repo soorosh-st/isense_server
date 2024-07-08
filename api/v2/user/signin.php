@@ -12,7 +12,7 @@ $iv = filter_var($data->iv, FILTER_SANITIZE_STRING);
 
 if (!$username || !$password) {
     http_response_code(400);
-    echo json_encode(array("message" => "Not enough information"));
+    echo json_encode(array("Message" => "Not enough information"));
     die();
 }
 
@@ -31,7 +31,7 @@ if ($result = $user->signin($iv)) {
     );
 } else {
     http_response_code(403);
-    echo json_encode(array("message" => "Cant login with provided information"));
+    echo json_encode(array("Message" => "Cant login with provided information"));
 }
 
 
