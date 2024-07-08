@@ -51,6 +51,13 @@ class scenario
             return false;
         }
 
+        $stmt = $conn->prepare("UPDATE scenario SET isActive = 0 WHERE isActive = 1");
+        $stmt->execute();
+
+        $stmt = $conn->prepare("UPDATE scenario SET isActive = 1 WHERE scenario_id = ?");
+        $stmt->bind_param("s", $key);
+        $stmt->execute();
+
         $stmt = $conn->prepare("UPDATE house SET scenario = ? WHERE house_id = ?");
         $stmt->bind_param("ss", $scenario_code, $house_id);
         $update_success = $stmt->execute();

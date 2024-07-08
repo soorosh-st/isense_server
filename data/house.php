@@ -139,7 +139,7 @@ class house
 
     public function getHouseScenarios($theme)
     {
-        $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_img, scenario_delay FROM scenario WHERE house_id = ?");
+        $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_img, scenario_delay, isActive FROM scenario WHERE house_id = ?");
         $stmt->bind_param("s", $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();
