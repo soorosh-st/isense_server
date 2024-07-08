@@ -23,10 +23,9 @@ if ($result = $user->signin($iv)) {
         array(
             "message" => "Success",
             "token" => $result['token'],
-            "user_name" => $result['username'],
-            "user_id" => $result['id'],
-            "houses" => $result['houses'],
-            "isManager" => $result['isManager']
+            "isManager" => $result['isManager'],
+            "houses" => $result['houses']
+
         )
     );
 } else {
