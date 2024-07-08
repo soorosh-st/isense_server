@@ -137,7 +137,7 @@ class house
         return $user_list;
     }
 
-    public function getHouseScenarios()
+    public function getHouseScenarios($theme)
     {
         $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_img, scenario_delay FROM scenario WHERE house_id = ?");
         $stmt->bind_param("s", $this->house_id);
@@ -146,9 +146,17 @@ class house
 
         $scenarios = [];
         while ($row = $result->fetch_assoc()) {
+            // Modify scenario_img based on theme
+            if ($theme == "Blue") {
+                $row['scenario_img'] .= "_blue.svg";
+            } elseif ($theme == "Red") {
+                $row['scenario_img'] .= ".svg";
+            }
+
             $scenarios[] = $row;
         }
 
+        $stmt->close();
         return $scenarios;
     }
 
