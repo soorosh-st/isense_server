@@ -142,11 +142,12 @@ class user
     {
         $success = true;
         $stmt = $this->conn->prepare("SELECT noTimeLimit,isManager, access_timeout, token_timeout FROM user WHERE user_token = ?");
-        $stmt->bind_param("ss", $this->username, $this->token);
+        $stmt->bind_param("s", $this->token);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
+            // echo "hi";
             $row = $result->fetch_assoc();
             $isManager = $row['isManager'];
             $accessTimeout = strtotime($row['access_timeout']);
@@ -154,12 +155,15 @@ class user
             $noTimeLimit = $row['noTimeLimit'];
             $currentTime = time();
             if (!$isManager && $accessTimeout < $currentTime && !$noTimeLimit) {
+                //echo "hi3";
                 $success = false;
             }
             if ($tokenTimeout < $currentTime) {
                 $success = false;
+                //echo "hi2";
             }
         } else {
+            //echo "hi4";
             $success = false;
         }
 
