@@ -26,11 +26,6 @@ if ($headers['Authorization']) {
 }
 
 
-if (!$username) {
-    http_response_code(400);
-    echo json_encode(array("Message" => "Not enough information"));
-    die();
-}
 
 $user = new user($conn, NULL, NULL, true, NULL, $token);
 
