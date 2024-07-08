@@ -38,18 +38,38 @@ class smartKey implements JsonSerializable
 
     function setKey($house_id, $key, $conn)
     {
-        $stmt = $conn->prepare("UPDATE smartkey SET  key_status = ?, active_color = ?, deactive_color = ? , newCommand = 1 WHERE key_id = ?");
-
-        $stmt->bind_param("ssss", $this->key_status, $this->active_color, $this->deactive_color, $this->key_id);
+        $stmt = $conn->prepare("SELECT key_id FROM smartkey WHERE key_id = ?");
+        $stmt->bind_param("s", $this->key_id);
         $stmt->execute();
-        if ($stmt->affected_rows === 0) {
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
             $stmt->close();
             return false;
         }
-        $stmt = $conn->prepare("UPDATE house SET keyChange = 1 WHERE house_id = ?");
+        $stmt = $conn->prepare("SELECT house_id FROM house WHERE house_id = ?");
         $stmt->bind_param("s", $house_id);
         $stmt->execute();
-        if ($stmt->affected_rows === 0) {
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            return false;
+        }
+
+        $stmt = $conn->prepare("UPDATE smartkey SET  key_status = ?, active_color = ?, deactive_color = ? , newCommand = 1 WHERE key_id = ?");
+
+        $stmt->bind_param("ssss", $this->key_status, $this->active_color, $this->deactive_color, $this->key_id);
+
+        if (!$stmt->execute()) {
+            $stmt->close();
+            return false;
+        }
+
+
+
+        $stmt = $conn->prepare("UPDATE house SET keyChange = 1 WHERE house_id = ?");
+        $stmt->bind_param("s", $house_id);
+
+        if (!$stmt->execute()) {
             $stmt->close();
             return false;
         }

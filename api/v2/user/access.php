@@ -16,20 +16,20 @@ if ($headers['Authorization']) {
     list($type, $token) = explode(' ', $authHeader);
     if ($type != 'Bearer') {
         http_response_code(401);
-        echo json_encode(['error' => 'Invalid token']);
+        echo json_encode(['Message' => 'Invalid token']);
         die();
     }
 } else {
     // Missing token
     http_response_code(401);
-    echo json_encode(['error' => 'Missing token']);
+    echo json_encode(['Message' => 'Missing token']);
     die();
 }
 
 
 if (!$username) {
     http_response_code(400);
-    echo json_encode(array("message" => "Not enough information"));
+    echo json_encode(array("Message" => "Not enough information"));
     die();
 }
 
@@ -38,10 +38,10 @@ $user = new user($conn, $username, NULL, true, NULL, $token);
 
 if ($user->checkAccess()) {
     http_response_code(200);
-    echo json_encode(array("message" => "Access Granted"));
+    echo json_encode(array("Message" => "Access Granted"));
 } else {
     http_response_code(403);
-    echo json_encode(array("message" => "Access rejected"));
+    echo json_encode(array("Message" => "Access rejected"));
 }
 
 
