@@ -37,6 +37,76 @@ class group
 
 
     }
+    function getSmartKeyCount($conn, $house_id)
+    {
+        $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM smartkey WHERE house_id = ? ");
+        $stmt->bind_param("s", $house_id);
+        if (!$stmt) {
+            return false;
+        }
+        if (!$stmt->execute()) {
+            $stmt->close();
+            return false;
+        }
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+        $stmt->close();
+        return $count;
+    }
+    public function import($devices)
+    {
+        $added_count = 0;
+        $duplicate = false;
+        foreach ($devices as $device) {
+            $key_id = $device->id;
+
+            // Check if device is already in the room
+            $stmt_check = $this->conn->prepare("SELECT * FROM join_room_smartkey WHERE room_id = ? AND key_id = ?");
+            $stmt_check->bind_param("ii", $this->room_id, $key_id);
+            $stmt_check->execute();
+            $result = $stmt_check->get_result();
+
+            if ($result->num_rows > 0) {
+                $duplicate = true;
+                continue; // Skip adding this device if it already exists in the room
+            }
+
+            // Prepare statement for inserting device into the room
+            if ($device->type == "Key") {
+                $stmt = $this->conn->prepare("INSERT INTO join_room_smartkey (room_id, key_id) VALUES (?, ?)");
+                $stmt->bind_param("ii", $this->room_id, $key_id);
+            } elseif ($device->type == "Relay") {
+                // Add logic for Relay devices if needed
+                continue; // Example: $stmt = $this->conn->prepare("INSERT INTO join_room_relay (room_id, relay_id) VALUES (?, ?)");
+            } else {
+                continue; // Handle other device types if necessary
+            }
+
+            if (!$stmt->execute()) {
+                $stmt->close();
+                return false; // Return false on execution failure
+            }
+
+            $added_count++; // Increment count for successfully added devices
+            $stmt->close();
+        }
+
+        // Update the room's count column
+        if ($added_count > 0) {
+            $stmt_update = $this->conn->prepare("UPDATE room SET count = count + ? WHERE room_id = ?");
+            $stmt_update->bind_param("ii", $added_count, $this->room_id);
+            $stmt_update->execute();
+            $stmt_update->close();
+        }
+        if ($duplicate)
+            return false;
+        return true; // Return true indicating successful import
+    }
     public function readAll()
     {
         // SQL query to select all rooms for a specific house
@@ -68,27 +138,7 @@ class group
     }
 
 
-    function getSmartKeyCount($conn, $house_id)
-    {
-        $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM smartkey WHERE house_id = ? ");
-        $stmt->bind_param("s", $house_id);
-        if (!$stmt) {
-            return false;
-        }
-        if (!$stmt->execute()) {
-            $stmt->close();
-            return false;
-        }
-        $result = $stmt->get_result();
-        if ($result->num_rows === 0) {
-            $stmt->close();
-            return false;
-        }
-        $row = $result->fetch_assoc();
-        $count = $row['count'];
-        $stmt->close();
-        return $count;
-    }
+
 
 
     public function readSingle()

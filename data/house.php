@@ -162,7 +162,7 @@ class house
 
     public function getHouseSmartKey()
     {
-        $stmt = $this->conn->prepare("SELECT * FROM smartkey WHERE house_id = ?");
+        $stmt = $this->conn->prepare("SELECT key_id ,key_uid,key_name,key_status,active_color,deactive_color,key_model FROM smartkey WHERE house_id = ?");
         $stmt->bind_param("s", $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -170,6 +170,7 @@ class house
         $smartKeys = [];
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
+                $row['type'] = "Key";
                 $smartKeys[] = $row;
             }
         }
