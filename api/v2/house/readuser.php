@@ -7,10 +7,10 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/data/house.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $data = json_decode(file_get_contents("php://input"));
-$user_id = filter_var($data->user_id, FILTER_SANITIZE_STRING);
+$token = filter_var($data->token, FILTER_SANITIZE_STRING);
 $house_id = filter_var($data->house_id, FILTER_SANITIZE_STRING);
 
-if (!$user_id || !$house_id) {
+if (!$token || !$house_id) {
     http_response_code(400);
     echo json_encode(array("message" => "Not enough information"));
     die();
@@ -19,7 +19,7 @@ if (!$user_id || !$house_id) {
 
 $house = new house(NULL, $conn, $house_id);
 
-if ($response = $house->readAlluser($user_id)) {
+if ($response = $house->readAlluser($token)) {
     echo json_encode($response);
     http_response_code(200);
 } else {

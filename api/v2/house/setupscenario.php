@@ -17,6 +17,7 @@ $arrayOfscenario = [];
 foreach ($data->scenarios as $item) {
     $isActive = isset($item->isActive) ? $item->isActive : false;
     $scenarioObject = new scenario(
+        NULL,
         $item->key,
         $item->name,
         $item->src,
