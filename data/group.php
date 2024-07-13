@@ -66,7 +66,7 @@ class group
     }
     public function readSingle()
     {
-        $stmt = $this->conn->prepare("SELECT sk.key_id, sk.key_name, sk.key_status, sk.active_color, sk.deactive_color, sk.firmware_version, sk.key_model, sk.newCommand
+        $stmt = $this->conn->prepare("SELECT sk.key_id, sk.key_name, sk.key_status, sk.active_color, sk.deactive_color ,sk.key_model
                         FROM smartkey sk
                         INNER JOIN join_room_smartkey jrsk ON sk.key_id = jrsk.key_id
                         WHERE jrsk.room_id = ?");

@@ -33,8 +33,8 @@ if ($group_name == 'All') {
     $result = $group->readAll();
     echo json_encode($result);
     http_response_code(200);
-} else if (ctype_digit($group)) {
-    $result = $group_name->readSingle();
+} else if (ctype_digit($group_name)) {
+    $result = $group->readSingle();
     echo json_encode($result);
     http_response_code(200);
 } else {
