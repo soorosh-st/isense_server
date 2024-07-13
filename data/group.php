@@ -62,8 +62,35 @@ class group
         }
 
         $stmt->close();
-        return $rooms;
+        $count = $this->getSmartKeyCount($this->conn, $this->house_id);
+
+        return array("All_device_count" => $count, "groups" => $rooms);
     }
+
+
+    function getSmartKeyCount($conn, $house_id)
+    {
+        $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM smartkey WHERE house_id = ? ");
+        $stmt->bind_param("s", $house_id);
+        if (!$stmt) {
+            return false;
+        }
+        if (!$stmt->execute()) {
+            $stmt->close();
+            return false;
+        }
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+        $stmt->close();
+        return $count;
+    }
+
+
     public function readSingle()
     {
         $stmt = $this->conn->prepare("SELECT sk.key_id, sk.key_name, sk.key_status, sk.active_color, sk.deactive_color ,sk.key_model
