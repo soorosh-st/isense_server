@@ -342,6 +342,8 @@ class house
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
             $response['delay'] = $row['scenario_delay'];
+
+            $stmt = $this->conn->prepare("UPDATE house SET scenario=NULL WHERE house_id = ?");
         }
         $stmt = $this->conn->prepare("SELECT key_uid, key_status, active_color, deactive_color FROM smartkey WHERE house_id = ? AND newCommand = 1");
         $stmt->bind_param("s", $this->house_id);
