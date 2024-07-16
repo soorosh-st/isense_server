@@ -28,11 +28,7 @@ if ($headers['Authorization']) {
     echo json_encode(['Message' => 'Missing token']);
     die();
 }
-if (!$house_id) {
-    http_response_code(400);
-    echo json_encode(array("Message" => "Not enough information"));
-    die();
-}
+
 if (!$house_id || !$smartkey) {
     http_response_code(400);
     echo json_encode(array("Message" => "Not enough information"));
