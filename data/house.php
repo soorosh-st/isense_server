@@ -292,6 +292,36 @@ class house
     }
 
 
+    public function updateKey($arrayOfSmartKeys)
+    {
+        foreach ($arrayOfSmartKeys as $smartKey) {
+            $id = $smartKey->getKeyId();
+            $stmt_check = $this->conn->prepare("SELECT key_id FROM smartkey WHERE key_uid = ?");
+            $stmt_check->bind_param("s", $id);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+
+            if ($stmt_check->num_rows > 0) {
+                $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?, active_color=?,deactive_color=?,newCommand=? WHERE key_uid = ?");
+                $keyStatus = $smartKey->getKeyStatus();
+                $activeColor = $smartKey->getActiveColor();
+                $deactiveColor = $smartKey->getDeactiveColor();
+                $newCommand = 0;
+
+                $stmt->bind_param(
+                    "sssis",
+                    $keyStatus,
+                    $activeColor,
+                    $deactiveColor,
+                    $newCommand,
+                    $id
+                );
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+
+    }
     public function addKey($arrayOfSmartKeys)
     {
         foreach ($arrayOfSmartKeys as $smartKey) {
@@ -328,8 +358,6 @@ class house
                 $stmt->close();
             }
         }
-
-        $this->conn->close();
     }
     public function addRelay($arrayofRelays)
     {
