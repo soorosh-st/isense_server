@@ -302,17 +302,13 @@ class house
             $stmt_check->store_result();
 
             if ($stmt_check->num_rows > 0) {
-                $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?, active_color=?,deactive_color=?,newCommand=? WHERE key_uid = ?");
+                $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?,newCommand=? WHERE key_uid = ?");
                 $keyStatus = $smartKey->getKeyStatus();
-                $activeColor = $smartKey->getActiveColor();
-                $deactiveColor = $smartKey->getDeactiveColor();
                 $newCommand = 0;
 
                 $stmt->bind_param(
-                    "sssis",
+                    "sis",
                     $keyStatus,
-                    $activeColor,
-                    $deactiveColor,
                     $newCommand,
                     $id
                 );
@@ -353,6 +349,19 @@ class house
                     $deactiveColor,
                     $keyModel,
                     $newCommand
+                );
+                $stmt->execute();
+                $stmt->close();
+            } else {
+                $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?,newCommand=? WHERE key_uid = ?");
+                $keyStatus = $smartKey->getKeyStatus();
+                $newCommand = 0;
+
+                $stmt->bind_param(
+                    "sis",
+                    $keyStatus,
+                    $newCommand,
+                    $id
                 );
                 $stmt->execute();
                 $stmt->close();

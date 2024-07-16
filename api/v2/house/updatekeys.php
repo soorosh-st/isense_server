@@ -19,8 +19,8 @@ foreach ($data->smartKeys as $item) {
         $item->key_id,
         NULL,
         $item->key_status,
-        $item->active_color,
-        $item->deactive_color,
+        NULL,
+        NULL,
         NULL,
         NULL,
         true
