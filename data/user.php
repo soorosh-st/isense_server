@@ -61,6 +61,60 @@ class user
         return false;
     }
 
+    public function removeUserFromHouse($user_id, $house_id)
+    {
+        // Check if admin_user_id is an admin
+
+        $stmt = $this->conn->prepare("SELECT user_id,isManager FROM user WHERE token = ?");
+        $stmt->bind_param("i", $this->token);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            if ($row['isManager'] != 1) {
+                return array("success" => false, "message" => "Admin user is not an admin", "code" => 401);
+            }
+        } else {
+            return array("success" => false, "message" => "Admin user not found", "code" => 404);
+        }
+        $admin_id =
+
+            // Check if admin_user_id is part of the house
+            $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $a, $house_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows == 0) {
+            return array("success" => false, "message" => "Admin user is not part of this house", "code" => 401);
+        }
+
+        // Check if user_id is part of the house
+        $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $user_id, $house_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows == 0) {
+            return array("success" => false, "message" => "User is not part of this house", "code" => 404);
+        }
+
+        // Remove user_id from the house
+        $stmt = $this->conn->prepare("DELETE FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $user_id, $this->house_id);
+
+        if ($stmt->execute()) {
+            // Optionally delete the user from the user table if needed
+            $delete_user_stmt = $this->conn->prepare("DELETE FROM user WHERE user_id = ?");
+            $delete_user_stmt->bind_param("i", $user_id);
+            $delete_user_stmt->execute();
+
+            return array("success" => true, "message" => "User removed from the house successfully", "code" => 200);
+        } else {
+            return array("success" => false, "message" => "Failed to remove user from the house", "code" => 500);
+        }
+    }
 
     private function getHousesByUserId($user_id)
     {
