@@ -136,9 +136,32 @@ class house
         return $user_list;
     }
 
-    public function getHouseScenarios()
+
+    public function setHouseScenarioFavorites($scenarios)
     {
-        $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive FROM scenario WHERE house_id = ?");
+        $stmt = $this->conn->prepare("UPDATE scenario SET favorite=0 WHERE house_id = ?");
+        $stmt->bind_param("i", $this->house_id);
+        if (!$stmt->execute())
+            return false;
+
+        foreach ($scenarios as $scenario) {
+            $stmt = $this->conn->prepare("UPDATE scenario SET favorite=1 WHERE house_id = ? AND scenario_id = ?");
+            $stmt->bind_param("ii", $this->house_id, $scenario->scenario_id);
+            if (!$stmt->execute())
+                return false;
+
+        }
+        $stmt->close();
+        return true;
+    }
+
+    public function getHouseScenarios($favorite)
+    {
+        if ($favorite == 0)
+            $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive FROM scenario WHERE house_id = ?");
+        else
+            $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive FROM scenario WHERE house_id = ? AND favorite=1");
+
         $stmt->bind_param("s", $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();

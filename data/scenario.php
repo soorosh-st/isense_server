@@ -20,14 +20,24 @@ class scenario
         $this->isActive = false;
     }
 
-    function readAll($house_id, $token, $conn)
+    function readAll($house_id, $token, $conn, $favorite)
     {
 
         $house = new house(NULL, $conn, $house_id);
         if (!$house->isUserInHouse($token)) {
             return false;
         }
-        return $house->getHouseScenarios();
+        return $house->getHouseScenarios($favorite);
+    }
+
+
+    function favorite($house_id, $token, $conn, $scenario)
+    {
+        $house = new house(NULL, $conn, $house_id);
+        if (!$house->isUserInHouse($token)) {
+            return false;
+        }
+        return $house->setHouseScenarioFavorites($scenario);
     }
     function setKey($house_id, $key, $conn)
     {
