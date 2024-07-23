@@ -158,7 +158,7 @@ class house
     public function getHouseScenarios($favorite)
     {
         if ($favorite == 0) {
-            $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive,favorit FROM scenario WHERE house_id = ?");
+            $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive,favorite FROM scenario WHERE house_id = ?");
         } else {
             $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive,favorite FROM scenario WHERE house_id = ? AND favorite=1");
         }
@@ -177,7 +177,7 @@ class house
 
         // If favorites were requested and none were found, fetch up to 4 random scenarios
         if ($favorite == 1 && empty($scenarios)) {
-            $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive,favorit FROM scenario WHERE house_id = ? ORDER BY RAND() LIMIT 4");
+            $stmt = $this->conn->prepare("SELECT scenario_id, scenario_name, scenario_code, scenario_delay, isActive,favorite FROM scenario WHERE house_id = ? ORDER BY RAND() LIMIT 4");
             $stmt->bind_param("s", $this->house_id);
             $stmt->execute();
             $result = $stmt->get_result();

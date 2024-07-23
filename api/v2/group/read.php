@@ -37,6 +37,10 @@ if ($group_name == 'All') {
     $result = $group->readSingle();
     echo json_encode($result);
     http_response_code(200);
+} else if ($group_name == 'Top') {
+    $result = $group->readTop();
+    echo json_encode($result);
+    http_response_code(200);
 } else {
     echo json_encode(array("Message" => "Not enough information"));
     http_response_code(400);

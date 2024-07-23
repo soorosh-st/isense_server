@@ -21,14 +21,14 @@ class group
     }
     public function create()
     {
-        $stmt = $this->conn->prepare("INSERT INTO room (title, img_src, house_id, database_status) VALUES (?, ?, ?, ?)");
+        $stmt = $this->conn->prepare("INSERT INTO room (title, img_src, house_id, database_status,clicks) VALUES (?, ?, ?, ?,?)");
         if (!$stmt) {
 
             return false;
         }
-
+        $randomNumber = rand(0, 7);
         $database_status = "Available";  // Example default value
-        $stmt->bind_param("ssss", $this->title, $this->img_src, $this->house_id, $database_status);
+        $stmt->bind_param("ssssi", $this->title, $this->img_src, $this->house_id, $database_status, $randomNumber);
 
         if ($stmt->execute()) {
 
@@ -107,6 +107,31 @@ class group
             return false;
         return true; // Return true indicating successful import
     }
+    public function readTop()
+    {
+        $query = "SELECT room_id, title, img_src, count, clicks FROM room WHERE house_id = ? ORDER BY clicks DESC LIMIT 3";
+
+        // Prepare the query
+        $stmt = $this->conn->prepare($query);
+
+        // Bind the house_id parameter
+        $stmt->bind_param('i', $this->house_id);
+
+        // Execute the query
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        // Fetch the top 3 results
+        $rooms = [];
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $rooms[] = $row;
+            }
+        }
+
+        $stmt->close();
+        return $rooms;
+    }
     public function readAll()
     {
         // SQL query to select all rooms for a specific house
@@ -163,6 +188,20 @@ class group
         }
 
         $stmt->close();
+        $stmt = $this->conn->prepare("SELECT clicks FROM room WHERE room_id = ?  ");
+        $stmt->bind_param("i", $this->room_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $clicks = $result->fetch_assoc()['clicks'];
+        $stmt->close();
+
+        $clicks += 1;
+        $stmt = $this->conn->prepare("UPDATE room SET clicks=? WHERE  room_id = ?");
+        $stmt->bind_param("ii", $clicks, $this->room_id);
+        $stmt->execute();
+        $stmt->close();
+
+
         return $smartkeys;
     }
 }
