@@ -370,7 +370,7 @@ class house
                     $stmt_pole->close();
                 }
             } else {
-                $stmt = $this->con->prepare("UPDATE smartkey SET key_status=?,newCommand=? WHERE key_uid = ?");
+                $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?,newCommand=? WHERE key_uid = ?");
                 $keyStatus = $smartKey->getKeyStatus();
                 $newCommand = 0;
 
