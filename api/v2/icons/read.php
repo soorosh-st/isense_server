@@ -9,5 +9,5 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $image = new image($conn);
 
-echo json_encode($image->readAll());
+echo json_encode($image->readAllIcon());
 http_response_code(200);
