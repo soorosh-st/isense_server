@@ -20,14 +20,14 @@ class scenario
         $this->isActive = false;
     }
 
-    function readAll($house_id, $token, $conn, $theme)
+    function readAll($house_id, $token, $conn)
     {
 
         $house = new house(NULL, $conn, $house_id);
         if (!$house->isUserInHouse($token)) {
             return false;
         }
-        return $house->getHouseScenarios($theme);
+        return $house->getHouseScenarios();
     }
     function setKey($house_id, $key, $conn)
     {

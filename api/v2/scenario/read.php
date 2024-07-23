@@ -8,7 +8,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $data = json_decode(file_get_contents("php://input"));
 $house_id = filter_var($data->house_id, FILTER_SANITIZE_STRING);
-$theme = filter_var($data->theme, FILTER_SANITIZE_STRING);
+
 $token;
 $headers = getallheaders();
 if ($headers['Authorization']) {
@@ -26,7 +26,7 @@ if ($headers['Authorization']) {
     echo json_encode(['Message' => 'Missing token']);
     die();
 }
-if (!$house_id || !$theme) {
+if (!$house_id) {
     http_response_code(400);
     echo json_encode(array("Message" => "Not enough information"));
     die();
@@ -34,7 +34,7 @@ if (!$house_id || !$theme) {
 
 
 $scenario = new scenario(NULL, NULL, NULL, NULL, NULL);
-if ($response = $scenario->readAll($house_id, $token, $conn, $theme)) {
+if ($response = $scenario->readAll($house_id, $token, $conn)) {
     echo json_encode($response);
     http_response_code(200);
 } else {
