@@ -31,7 +31,7 @@ class house
             $stmt_check->bind_result($scenarioId);
 
             if ($stmt_check->num_rows == 0) {
-                $stmt = $this->conn->prepare("INSERT INTO scenario (scenario_name, scenario_code, scenario_img, scenario_delay, house_id) VALUES (?, ?, ?, ?, ?)");
+                $stmt = $this->conn->prepare("INSERT INTO scenario (scenario_name, scenario_code,  scenario_delay, house_id) VALUES (?, ?,  ?, ?)");
 
                 $scenarioName = $scenario->getName();
                 $scenarioCode = $scenario->getKey();
@@ -41,10 +41,9 @@ class house
 
 
                 $stmt->bind_param(
-                    "sssis",
+                    "ssis",
                     $scenarioName,
                     $scenarioCode,
-                    $scenarioImg,
                     $scenarioDelay,
                     $houseId
                 );
@@ -162,7 +161,7 @@ class house
 
     public function getHouseSmartKey()
     {
-        $stmt = $this->conn->prepare("SELECT key_id ,key_uid,key_name,key_status,active_color,deactive_color,key_model FROM smartkey WHERE house_id = ?");
+        $stmt = $this->conn->prepare("SELECT key_id, key_uid, key_name,active_color, deactive_color, key_model FROM smartkey WHERE house_id = ?");
         $stmt->bind_param("s", $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -171,6 +170,20 @@ class house
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 $row['type'] = "Key";
+
+                // Get poles for the current key
+                $stmt_poles = $this->conn->prepare("SELECT pole_status, pole_img, pole_displayname FROM keypole WHERE key_id = ?");
+                $stmt_poles->bind_param("i", $row['key_id']);
+                $stmt_poles->execute();
+                $result_poles = $stmt_poles->get_result();
+
+                $poles = [];
+                while ($pole = $result_poles->fetch_assoc()) {
+                    $poles[] = $pole;
+                }
+                $stmt_poles->close();
+
+                $row['poles'] = $poles;
                 $smartKeys[] = $row;
             }
         }
@@ -314,10 +327,13 @@ class house
             $stmt_check = $this->conn->prepare("SELECT key_id FROM smartkey WHERE key_uid = ?");
             $stmt_check->bind_param("s", $id);
             $stmt_check->execute();
-            $stmt_check->store_result();
+            // $stmt_check->store_result();
+            $result = $stmt_check->get_result();
+            $row = $result->fetch_assoc();
+            $key_id = $row['key_id'];
 
-            if ($stmt_check->num_rows == 0) {
-                $stmt = $this->conn->prepare("INSERT INTO smartkey (key_uid, house_id, key_name, key_status, active_color, deactive_color, key_model, newCommand) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($result->num_rows == 0) {
+                $stmt = $this->conn->prepare("INSERT INTO smartkey (key_uid, house_id, key_name, key_status, active_color, deactive_color, key_model, newCommand,pole_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)");
 
                 $keyId = $smartKey->getKeyId();
                 $houseId = $this->house_id; // Assign the house_id to the smart key
@@ -327,9 +343,9 @@ class house
                 $deactiveColor = $smartKey->getDeactiveColor();
                 $keyModel = $smartKey->getKeyModel();
                 $newCommand = $smartKey->isNewCommand() ? 1 : 0;
-
+                $poleNumber = strlen($keyStatus);
                 $stmt->bind_param(
-                    "sisssssi",
+                    "sisssssii",
                     $keyId,
                     $houseId,
                     $keyName,
@@ -337,10 +353,22 @@ class house
                     $activeColor,
                     $deactiveColor,
                     $keyModel,
-                    $newCommand
+                    $newCommand,
+                    $poleNumber
                 );
                 $stmt->execute();
                 $stmt->close();
+                $keyIdInserted = $this->conn->insert_id;
+                for ($i = 0; $i < $poleNumber; $i++) {
+                    $poleStatus = (int) $keyStatus[$i]; // Static value for pole status at creation
+                    $poleImg = "/public/devices/light-bulb.svg"; // Static value for pole image at creation
+                    $poleName = "Pole " . $i + 1; // Static value for pole name at creation
+
+                    $stmt_pole = $this->conn->prepare("INSERT INTO keypole (pole_status, pole_img, pole_name, key_id,pole_displayname) VALUES (?, ?, ?, ?,?)");
+                    $stmt_pole->bind_param("issis", $poleStatus, $poleImg, $poleName, $keyIdInserted, $poleName);
+                    $stmt_pole->execute();
+                    $stmt_pole->close();
+                }
             } else {
                 $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?,newCommand=? WHERE key_uid = ?");
                 $keyStatus = $smartKey->getKeyStatus();
@@ -354,6 +382,17 @@ class house
                 );
                 $stmt->execute();
                 $stmt->close();
+
+                for ($i = 0; $i < strlen($keyStatus); $i++) {
+                    $poleStatus = (int) $keyStatus[$i]; // Get the status from keyStatus string
+                    $stmt_pole = $this->conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_name=?");
+                    $poleName = "Pole " . ($i + 1);
+
+                    $stmt_pole->bind_param("iis", $poleStatus, $key_id, $poleName);
+                    $stmt_pole->execute();
+                    $stmt_pole->close();
+                }
+
             }
         }
     }

@@ -20,7 +20,7 @@ foreach ($data->scenarios as $item) {
         NULL,
         $item->key,
         $item->name,
-        $item->src,
+        NULL,
         $item->delay
 
     );

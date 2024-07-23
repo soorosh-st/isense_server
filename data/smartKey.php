@@ -44,6 +44,7 @@ class smartKey implements JsonSerializable
         $stmt->store_result();
         if ($stmt->num_rows === 0) {
             $stmt->close();
+            // key does not exist
             return false;
         }
         $stmt = $conn->prepare("SELECT house_id FROM house WHERE house_id = ?");
@@ -52,16 +53,28 @@ class smartKey implements JsonSerializable
         $stmt->store_result();
         if ($stmt->num_rows === 0) {
             $stmt->close();
+            // key is not in this house
             return false;
         }
 
-        $stmt = $conn->prepare("UPDATE smartkey SET  key_status = ?, active_color = ?, deactive_color = ? , newCommand = 1 WHERE key_id = ?");
+        $stmt = $conn->prepare("UPDATE smartkey SET  key_status = ?, newCommand = 1 WHERE key_id = ?");
 
-        $stmt->bind_param("ssss", $this->key_status, $this->active_color, $this->deactive_color, $this->key_id);
+        $stmt->bind_param("ss", $this->key_status, $this->key_id);
 
         if (!$stmt->execute()) {
             $stmt->close();
             return false;
+        }
+        $stmt->close();
+
+        for ($i = 0; $i < strlen($this->key_status); $i++) {
+            $poleStatus = (int) $this->key_status[$i]; // Get the status from keyStatus string
+            $stmt_pole = $conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_name=?");
+            $poleName = "Pole " . ($i + 1);
+
+            $stmt_pole->bind_param("iis", $poleStatus, $this->key_id, $poleName);
+            $stmt_pole->execute();
+            $stmt_pole->close();
         }
 
 

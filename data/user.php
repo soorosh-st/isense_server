@@ -78,11 +78,11 @@ class user
         } else {
             return array("success" => false, "message" => "Admin user not found", "code" => 404);
         }
-        $admin_id =
+        $admin_id = $row['user_id'];
 
-            // Check if admin_user_id is part of the house
-            $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
-        $stmt->bind_param("ii", $a, $house_id);
+        // Check if admin_user_id is part of the house
+        $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
+        $stmt->bind_param("ii", $admin_id, $house_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -102,7 +102,7 @@ class user
 
         // Remove user_id from the house
         $stmt = $this->conn->prepare("DELETE FROM join_user_house WHERE user_id = ? AND house_id = ?");
-        $stmt->bind_param("ii", $user_id, $this->house_id);
+        $stmt->bind_param("ii", $user_id, $house_id);
 
         if ($stmt->execute()) {
             // Optionally delete the user from the user table if needed

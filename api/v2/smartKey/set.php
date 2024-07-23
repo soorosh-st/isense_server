@@ -36,7 +36,7 @@ if (!$house_id || !$smartkey) {
 }
 
 
-$key = new smartkey($smartkey->key_id, NULL, $smartkey->key_status, $smartkey->active_color, $smartkey->deactive_color, NULL, NULL, 1);
+$key = new smartkey($smartkey->key_id, NULL, $smartkey->key_status, NULL, NULL, NULL, NULL, 1);
 $user = new user($conn, NULL, NULL, NULL, NULL, $token);
 
 if ($response = $key->setKey($house_id, $key, $conn)) {
