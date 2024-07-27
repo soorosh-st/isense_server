@@ -210,7 +210,7 @@ class house
                 $row['type'] = "Key";
 
                 // Get poles for the current key
-                $stmt_poles = $this->conn->prepare("SELECT pole_status, pole_img, pole_displayname FROM keypole WHERE key_id = ?");
+                $stmt_poles = $this->conn->prepare("SELECT pole_status , pole_img , pole_displayname , pole_id FROM keypole WHERE key_id = ?");
                 $stmt_poles->bind_param("i", $row['key_id']);
                 $stmt_poles->execute();
                 $result_poles = $stmt_poles->get_result();
