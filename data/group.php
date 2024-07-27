@@ -168,7 +168,7 @@ class group
 
     public function readSingle()
     {
-        $stmt = $this->conn->prepare("SELECT sk.key_id, sk.key_name, sk.key_status, sk.active_color, sk.deactive_color ,sk.key_model
+        $stmt = $this->conn->prepare("SELECT sk.key_id, sk.key_name, sk.key_status, sk.active_color, sk.deactive_color ,sk.key_model , sk.pole_number,key_uid
                         FROM smartkey sk
                         INNER JOIN join_room_smartkey jrsk ON sk.key_id = jrsk.key_id
                         WHERE jrsk.room_id = ?");
