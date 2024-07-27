@@ -21,14 +21,14 @@ class group
     }
     public function create()
     {
-        $stmt = $this->conn->prepare("INSERT INTO room (title, img_src, house_id, database_status,clicks) VALUES (?, ?, ?, ?,?)");
+        $stmt = $this->conn->prepare("INSERT INTO room (title,  house_id, database_status,clicks) VALUES (?, ?, ?, ?,?)");
         if (!$stmt) {
 
             return false;
         }
         $randomNumber = rand(0, 7);
         $database_status = "Available";  // Example default value
-        $stmt->bind_param("ssssi", $this->title, $this->img_src, $this->house_id, $database_status, $randomNumber);
+        $stmt->bind_param("sssi", $this->title, $this->house_id, $database_status, $randomNumber);
 
         if ($stmt->execute()) {
 
@@ -109,7 +109,7 @@ class group
     }
     public function readTop()
     {
-        $query = "SELECT room_id, title, img_src, count, clicks FROM room WHERE house_id = ? ORDER BY clicks DESC LIMIT 3";
+        $query = "SELECT room_id, title, count, clicks FROM room WHERE house_id = ? ORDER BY clicks DESC LIMIT 3";
 
         // Prepare the query
         $stmt = $this->conn->prepare($query);
@@ -135,7 +135,7 @@ class group
     public function readAll()
     {
         // SQL query to select all rooms for a specific house
-        $query = "SELECT room_id, title, img_src,count FROM room WHERE house_id = ?";
+        $query = "SELECT room_id, title,count FROM room WHERE house_id = ?";
 
         // Prepare the query
         $stmt = $this->conn->prepare($query);
