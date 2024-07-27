@@ -24,9 +24,9 @@ if (!$username || !$password) {
 }
 
 if ($isManager)
-    $user = new user($conn, $username, $password, true, NULL, NULL);
+    $user = new user($conn, $username, $password, true, NULL, NULL, NULL);
 else
-    $user = new user($conn, $username, $password, false, $timeout, NULL);
+    $user = new user($conn, $username, $password, false, $timeout, NULL, NULL);
 
 if ($reslut = $user->signup()) {
     http_response_code(200);

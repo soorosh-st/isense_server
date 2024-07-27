@@ -16,7 +16,7 @@ if (!$username || !$password) {
     die();
 }
 
-$user = new user($conn, $username, $password, NULL, NULL, NULL);
+$user = new user($conn, $username, $password, NULL, NULL, NULL, NULL);
 if ($result = $user->signin($iv)) {
     http_response_code(200);
     echo json_encode(

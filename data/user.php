@@ -3,6 +3,7 @@ date_default_timezone_set('Asia/Tehran');
 class user
 {
     private $username;
+    private $user_id;
     private $password;
     private $token;
     private $isManager;
@@ -12,7 +13,7 @@ class user
 
 
 
-    public function __construct($conn, $username, $password, $isManager, $timeout, $token)
+    public function __construct($conn, $username, $password, $isManager, $timeout, $token, $user_id)
     {
         $this->token = $token;
         $this->username = $username;
@@ -20,6 +21,7 @@ class user
         $this->conn = $conn;
         $this->isManager = $isManager;
         $this->timeout = $timeout;
+        $this->user_id = $user_id;
     }
 
 
@@ -60,12 +62,22 @@ class user
         $this->conn->close();
         return false;
     }
+    public function readAllUser($house_id)
+    {
 
+        $house = new house(NULL, $this->conn, $house_id);
+        if ($admin_id = $house->isUserAdminInHouse($this->token)) {
+
+            return $house->getHouseUsers($admin_id);
+        } else
+            return false;
+
+    }
     public function removeUserFromHouse($user_id, $house_id)
     {
         // Check if admin_user_id is an admin
 
-        $stmt = $this->conn->prepare("SELECT user_id,isManager FROM user WHERE token = ?");
+        $stmt = $this->conn->prepare("SELECT user_id , isManager FROM user WHERE user_token = ?");
         $stmt->bind_param("i", $this->token);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -79,7 +91,6 @@ class user
             return array("success" => false, "message" => "Admin user not found", "code" => 404);
         }
         $admin_id = $row['user_id'];
-
         // Check if admin_user_id is part of the house
         $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
         $stmt->bind_param("ii", $admin_id, $house_id);

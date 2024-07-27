@@ -92,11 +92,11 @@ class house
             return array("success" => false, "message" => "Specified user did not found", "code" => 404);
         }
     }
-    public function isUserAdminInHouse($user_id)
+    public function isUserAdminInHouse($token)
     {
         // Check if user is an admin
-        $stmt = $this->conn->prepare("SELECT isManager FROM user WHERE user_id = ?");
-        $stmt->bind_param("i", $user_id);
+        $stmt = $this->conn->prepare("SELECT isManager,user_id FROM user WHERE user_token = ?");
+        $stmt->bind_param("i", $token);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {
@@ -108,16 +108,19 @@ class house
         } else {
             return false;
         }
-
+        $admin_id = $row['user_id'];
         // Check if user is part of the house
         $stmt = $this->conn->prepare("SELECT 1 FROM join_user_house WHERE user_id = ? AND house_id = ?");
-        $stmt->bind_param("ii", $user_id, $this->house_id);
+        $stmt->bind_param("ii", $admin_id, $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        return $result->num_rows > 0;
+        if ($result->num_rows > 0) {
+            return $admin_id;
+        } else
+            return false;
     }
-    public function getHouseUsers($requested_user)
+    public function getHouseUsers($admin_id)
     {
         $stmt = $this->conn->prepare("SELECT user.user_id, user.user_name, user.access_timeout, user.lastLogin 
                                   FROM user 
@@ -129,7 +132,7 @@ class house
 
         $user_list = array();
         while ($row = $result->fetch_assoc()) {
-            if ($row['user_id'] != $requested_user) {
+            if ($row['user_id'] != $admin_id) {
                 $user_list[] = $row;
             }
         }
@@ -261,13 +264,7 @@ class house
         }
     }
 
-    public function readAllUser($user_id)
-    {
-        if (!$this->isUserAdminInHouse($user_id)) {
-            return false;
-        }
-        return $this->getHouseUsers($user_id);
-    }
+
     public function adduser($user)
     {
 

@@ -1,11 +1,13 @@
 <?php
 header('Content-Type: application/json');
-header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Methods: POST, GET");
 header("Access-Control-Allow-Credentials: true");
 require_once $_SERVER['DOCUMENT_ROOT'] . '/data/user.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/data/house.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $data = json_decode(file_get_contents("php://input"));
+$house_id = filter_var($data->house_id, FILTER_SANITIZE_STRING);
 $token;
 $headers = getallheaders();
 
@@ -24,19 +26,25 @@ if ($headers['Authorization']) {
     echo json_encode(['Message' => 'Missing token']);
     die();
 }
-
-
-
-$user = new user($conn, NULL, NULL, true, NULL, $token, NULL);
-
-
-if ($user->checkAccess()) {
-    http_response_code(200);
-    echo json_encode(array("Message" => "Access Granted"));
-} else {
-    http_response_code(403);
-    echo json_encode(array("Message" => "Access rejected"));
+if (!$house_id) {
+    http_response_code(400);
+    echo json_encode(array("message" => "Not enough information"));
+    die();
 }
+
+
+$user = new user($conn, NULL, NULL, NULL, NULL, $token, NULL);
+
+if ($response = $user->readAlluser($house_id)) {
+    echo json_encode($response);
+    http_response_code(200);
+} else {
+    echo json_encode(array("message" => "Data could not be retrived"));
+    http_response_code(404);
+}
+
+
+
 
 
 
