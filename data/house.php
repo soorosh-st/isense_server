@@ -394,7 +394,7 @@ class house
                 for ($i = 0; $i < $poleNumber; $i++) {
                     $poleStatus = (int) $keyStatus[$i]; // Static value for pole status at creation
                     $poleImg = "/public/devices/light-bulb.svg"; // Static value for pole image at creation
-                    $poleName = "Pole " . ($i + 1); // Static value for pole name at creation
+                    $poleName = ($i + 1); // Static value for pole name at creation
 
                     $stmt_pole = $this->conn->prepare("INSERT INTO keypole (pole_status, pole_img, pole_name, key_id,pole_displayname) VALUES (?, ?, ?, ?,?)");
                     $stmt_pole->bind_param("issis", $poleStatus, $poleImg, $poleName, $keyIdInserted, $poleName);
@@ -418,7 +418,7 @@ class house
                 for ($i = 0; $i < strlen($keyStatus); $i++) {
                     $poleStatus = (int) $keyStatus[$i]; // Get the status from keyStatus string
                     $stmt_pole = $this->conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_name=?");
-                    $poleName = "Pole " . ($i + 1);
+                    $poleName = ($i + 1);
 
                     $stmt_pole->bind_param("iis", $poleStatus, $key_id, $poleName);
                     $stmt_pole->execute();

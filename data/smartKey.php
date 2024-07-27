@@ -36,30 +36,41 @@ class smartKey implements JsonSerializable
         return $house->getHouseSmartKey();
     }
 
-    function setKey($house_id, $key, $conn)
+    function setKey($house_id, $key, $conn, $pole_id)
     {
-        $stmt = $conn->prepare("SELECT key_id FROM smartkey WHERE key_id = ?");
+        $stmt = $conn->prepare("SELECT key_id,key_status FROM smartkey WHERE key_id = ?");
         $stmt->bind_param("s", $this->key_id);
         $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows === 0) {
+
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
             $stmt->close();
             // key does not exist
             return false;
         }
+        $row = $result->fetch_assoc();
+        $status = $row['key_status'];
         $stmt = $conn->prepare("SELECT house_id FROM house WHERE house_id = ?");
         $stmt->bind_param("s", $house_id);
         $stmt->execute();
         $stmt->store_result();
         if ($stmt->num_rows === 0) {
             $stmt->close();
-            // key is not in this house
+            // house does not exist
             return false;
         }
 
+        $stmt = $conn->prepare("SELECT pole_name FROM keypole WHERE pole_id = ?");
+        $stmt->bind_param("s", $pole_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $pole_number = (int) $row['pole_name'];
+        // echo $this->key_status;
+        $status[$pole_number - 1] = $this->key_status;
         $stmt = $conn->prepare("UPDATE smartkey SET  key_status = ?, newCommand = 1 WHERE key_id = ?");
 
-        $stmt->bind_param("ss", $this->key_status, $this->key_id);
+        $stmt->bind_param("ss", $status, $this->key_id);
 
         if (!$stmt->execute()) {
             $stmt->close();
@@ -67,16 +78,11 @@ class smartKey implements JsonSerializable
         }
         $stmt->close();
 
-        for ($i = 0; $i < strlen($this->key_status); $i++) {
-            $poleStatus = (int) $this->key_status[$i]; // Get the status from keyStatus string
-            $stmt_pole = $conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_name=?");
-            $poleName = "Pole " . ($i + 1);
 
-            $stmt_pole->bind_param("iis", $poleStatus, $this->key_id, $poleName);
-            $stmt_pole->execute();
-            $stmt_pole->close();
-        }
-
+        $stmt_pole = $conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_id=?");
+        $stmt_pole->bind_param("iii", $this->key_status, $this->key_id, $pole_id);
+        $stmt_pole->execute();
+        $stmt_pole->close();
 
 
         $stmt = $conn->prepare("UPDATE house SET keyChange = 1 WHERE house_id = ?");
