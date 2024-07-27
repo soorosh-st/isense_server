@@ -168,7 +168,7 @@ class group
 
     public function readSingle()
     {
-        $stmt = $this->conn->prepare("SELECT sk.key_id, sk.key_name, sk.key_status, sk.active_color, sk.deactive_color ,sk.key_model , sk.pole_number,key_uid
+        $stmt = $this->conn->prepare("SELECT sk.key_id, sk.key_name, sk.active_color, sk.deactive_color ,sk.key_model , sk.pole_number,key_uid
                         FROM smartkey sk
                         INNER JOIN join_room_smartkey jrsk ON sk.key_id = jrsk.key_id
                         WHERE jrsk.room_id = ?");
@@ -182,10 +182,28 @@ class group
         $stmt->execute();
         $result = $stmt->get_result();
 
-        $smartkeys = [];
-        while ($row = $result->fetch_assoc()) {
-            $smartkeys[] = $row;
+
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $row['type'] = "Key";
+
+                // Get poles for the current key
+                $stmt_poles = $this->conn->prepare("SELECT pole_status , pole_img , pole_displayname , pole_id FROM keypole WHERE key_id = ?");
+                $stmt_poles->bind_param("i", $row['key_id']);
+                $stmt_poles->execute();
+                $result_poles = $stmt_poles->get_result();
+
+                $poles = [];
+                while ($pole = $result_poles->fetch_assoc()) {
+                    $poles[] = $pole;
+                }
+                $stmt_poles->close();
+
+                $row['poles'] = $poles;
+                $smartkeys[] = $row;
+            }
         }
+
 
         $stmt->close();
         $stmt = $this->conn->prepare("SELECT clicks FROM room WHERE room_id = ?  ");
