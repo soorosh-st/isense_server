@@ -170,7 +170,44 @@ class user
         return base64_encode($encryptedData);
     }
 
+    public function updateuser($iv)
+    {
 
+
+        if (!$this->hasUserToken($this->user_id)) {
+            return array("success" => false, "message" => "user not found");
+        }
+        $accessTimeout = NULL;
+        $noTimeLimit = false;
+
+        if ($this->timeout == -1) {
+            $accessTimeout = null;
+            $noTimeLimit = true;
+        } else {
+            $accessTimeout = $this->timeout;
+        }
+
+
+        // Insert the relationship into join_user_house table
+        if ($this->password == NULL) {
+            $stmt = $this->conn->prepare("UPDATE user SET access_timeout = ? , noTimeLimit = ? WHERE user_id = ? ");
+            $stmt->bind_param("sii", $accessTimeout, $noTimeLimit, $this->user_id);
+        } else {
+            $this->password = $this->decryptAES($this->password, $iv);
+
+            $hashedPassword = password_hash($this->password, PASSWORD_BCRYPT, ['cost' => 11]);
+
+            $stmt = $this->conn->prepare("UPDATE user SET access_timeout = ? , noTimeLimit = ? , user_password= ? WHERE user_id = ? ");
+            $stmt->bind_param("sisi", $accessTimeout, $noTimeLimit, $hashedPassword, $this->user_id);
+
+        }
+
+        if ($stmt->execute()) {
+            return array("success" => true, "message" => "User updated successfully");
+        } else {
+            return array("success" => false, "message" => "Failed to update user");
+        }
+    }
 
     public function signup()
     {
@@ -244,6 +281,18 @@ class user
         $sql = "SELECT * FROM user WHERE user_name = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param('s', $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            return true;
+        } else
+            return false;
+    }
+    private function hasUserToken($user_id)
+    {
+        $sql = "SELECT * FROM user WHERE user_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param('s', $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {

@@ -60,21 +60,25 @@ class group
     }
     public function import($devices)
     {
-        $added_count = 0;
-        $duplicate = false;
+
+
+
+        // remove devices that are already in room
+        $stmt_delete = $this->conn->prepare("DELETE FROM `join_room_smartkey` WHERE room_id = ? ");
+        $stmt_delete->bind_param("i", $this->room_id);
+        if (!$stmt_delete->execute())
+            return false;
+
+        // rename the room
+        $stmt_delete = $this->conn->prepare("UPDATE room SET title = ?  WHERE room_id = ? ");
+        $stmt_delete->bind_param("si", $this->title, $this->room_id);
+        if (!$stmt_delete->execute())
+            return false;
+
         foreach ($devices as $device) {
             $key_id = $device->id;
 
-            // Check if device is already in the room
-            $stmt_check = $this->conn->prepare("SELECT * FROM join_room_smartkey WHERE room_id = ? AND key_id = ?");
-            $stmt_check->bind_param("ii", $this->room_id, $key_id);
-            $stmt_check->execute();
-            $result = $stmt_check->get_result();
 
-            if ($result->num_rows > 0) {
-                $duplicate = true;
-                continue; // Skip adding this device if it already exists in the room
-            }
 
             // Prepare statement for inserting device into the room
             if ($device->type == "Key") {
@@ -92,19 +96,18 @@ class group
                 return false; // Return false on execution failure
             }
 
-            $added_count++; // Increment count for successfully added devices
+            // Increment count for successfully added devices
             $stmt->close();
         }
 
         // Update the room's count column
-        if ($added_count > 0) {
-            $stmt_update = $this->conn->prepare("UPDATE room SET count = count + ? WHERE room_id = ?");
-            $stmt_update->bind_param("ii", $added_count, $this->room_id);
-            $stmt_update->execute();
-            $stmt_update->close();
-        }
-        if ($duplicate)
-            return false;
+        $size = sizeof($devices);
+
+        $stmt_update = $this->conn->prepare("UPDATE room SET count =  ? WHERE room_id = ?");
+        $stmt_update->bind_param("ii", $size, $this->room_id);
+        $stmt_update->execute();
+        $stmt_update->close();
+
         return true; // Return true indicating successful import
     }
     public function readTop()
