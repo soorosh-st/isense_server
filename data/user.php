@@ -37,7 +37,7 @@ class user
 
         $this->password = $this->decryptAES($this->password, $iv);
 
-        $stmt = $this->conn->prepare("SELECT isManager,user_name, user_password,user_id FROM user WHERE user_name = ?");
+        $stmt = $this->conn->prepare("SELECT isManager,user_name, user_password,user_id FROM user WHERE user_name = ? AND database_status = 'Available'");
         $stmt->bind_param("s", $this->username);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -55,7 +55,16 @@ class user
                 $this->createToken();
                 $houses = $this->getHousesByUserId($id);
 
-                return array("token" => $this->token, "username" => $this->username, "isManager" => $this->isManager, "id" => $id, "houses" => $houses);
+                $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
+                $log->create();
+
+                return [
+                    "token" => $this->token,
+                    "username" => $this->username,
+                    "isManager" => $this->isManager,
+                    "id" => $id,
+                    "houses" => $houses
+                ];
             }
         }
         $stmt->close();
@@ -117,9 +126,13 @@ class user
 
         if ($stmt->execute()) {
             // Optionally delete the user from the user table if needed
-            $delete_user_stmt = $this->conn->prepare("DELETE FROM user WHERE user_id = ?");
-            $delete_user_stmt->bind_param("i", $user_id);
+            $delete_user_stmt = $this->conn->prepare("UPDATE user SET database_status=?,user_token = NULL WHERE user_id = ?");
+            $status = "Unavailable";
+            $delete_user_stmt->bind_param("si", $status, $user_id);
             $delete_user_stmt->execute();
+
+            $log = new Log($this->conn, "user with id: {$this->user_id} removed", $admin_id, 'HIGH');
+            $log->create();
 
             return array("success" => true, "message" => "User removed from the house successfully", "code" => 200);
         } else {
@@ -170,8 +183,31 @@ class user
         return base64_encode($encryptedData);
     }
 
-    public function updateuser($iv)
+    public function checkToken($token)
     {
+        $stmt = $this->conn->prepare("SELECT user_id FROM user WHERE user_token = ? AND database_status='Available' ");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        if (!$row) {  // Check if $row is null (no rows found)
+            return false;
+        }
+        $admin_id = $row['user_id'];
+        return $admin_id;
+    }
+
+    public function updateuser($iv, $admin_token)
+    {
+        $stmt = $this->conn->prepare("SELECT user_id FROM user WHERE user_token = ? AND database_status='Available' ");
+        $stmt->bind_param("s", $admin_token);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        if (!$row) {  // Check if $row is null (no rows found)
+            return array("success" => false, "message" => "You don't have access to do it");
+        }
+        $admin_id = $row['user_id'];
 
 
         if (!$this->hasUserToken($this->user_id)) {
@@ -192,14 +228,20 @@ class user
         if ($this->password == NULL) {
             $stmt = $this->conn->prepare("UPDATE user SET access_timeout = ? , noTimeLimit = ? WHERE user_id = ? ");
             $stmt->bind_param("sii", $accessTimeout, $noTimeLimit, $this->user_id);
+
+            $log = new Log($this->conn, "Access of user with id: {$this->user_id} changed", $admin_id, 'HIGH');
+            $log->create();
+
         } else {
             $this->password = $this->decryptAES($this->password, $iv);
 
             $hashedPassword = password_hash($this->password, PASSWORD_BCRYPT, ['cost' => 11]);
 
-            $stmt = $this->conn->prepare("UPDATE user SET access_timeout = ? , noTimeLimit = ? , user_password= ? WHERE user_id = ? ");
+            $stmt = $this->conn->prepare("UPDATE user SET access_timeout = ? , noTimeLimit = ? , user_password= ? ,user_token= NULL , token_timeout= NULL WHERE user_id = ? ");
             $stmt->bind_param("sisi", $accessTimeout, $noTimeLimit, $hashedPassword, $this->user_id);
 
+            $log = new Log($this->conn, "Password and access of user with id: {$this->user_id} changed", $admin_id, 'HIGH');
+            $log->create();
         }
 
         if ($stmt->execute()) {
@@ -211,7 +253,7 @@ class user
 
     public function signup($iv)
     {
-        $success = true;
+
         $accessTimeout = NULL;
         $noTimeLimit = false;
 
@@ -224,12 +266,14 @@ class user
         if ($this->timeout == -1) {
             $accessTimeout = null;
             $noTimeLimit = true;
-        } else if (!$this->isManager) {
-            $accessTimeout = date('Y-m-d H:i:s', strtotime('+' . $this->timeout . ' days'));
+        } else {
+            $accessTimeout = $this->timeout;
         }
 
         $stmt = $this->conn->prepare("INSERT INTO user (user_name, user_password, isManager, access_timeout, noTimeLimit) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $this->username, $hashedPassword, $this->isManager, $accessTimeout, $noTimeLimit);
+
+
 
         if ($stmt->execute() === TRUE) {
             return $this->conn->insert_id;
@@ -243,7 +287,7 @@ class user
     public function checkAccess()
     {
         $success = true;
-        $stmt = $this->conn->prepare("SELECT noTimeLimit,isManager, access_timeout, token_timeout FROM user WHERE user_token = ?");
+        $stmt = $this->conn->prepare("SELECT user_id,noTimeLimit,isManager, access_timeout, token_timeout FROM user WHERE user_token = ?");
         $stmt->bind_param("s", $this->token);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -255,6 +299,7 @@ class user
             $accessTimeout = strtotime($row['access_timeout']);
             $tokenTimeout = strtotime($row['token_timeout']);
             $noTimeLimit = $row['noTimeLimit'];
+            $id = $row['user_id'];
             $currentTime = time();
             if (!$isManager && $accessTimeout < $currentTime && !$noTimeLimit) {
                 //echo "hi3";
@@ -273,12 +318,15 @@ class user
         $stmt = $this->conn->prepare("UPDATE user SET lastLogin = now() WHERE user_name = ?");
         $stmt->bind_param("s", $this->username);
 
+        $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
+        $log->create();
+
         $stmt->execute();
         return $success;
     }
     private function hasUser($username)
     {
-        $sql = "SELECT * FROM user WHERE user_name = ?";
+        $sql = "SELECT * FROM user WHERE user_name = ? ";
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param('s', $username);
         $stmt->execute();

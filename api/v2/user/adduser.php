@@ -41,7 +41,7 @@ if (!$username || !$house_id) {
 $house = new house(NULL, $conn, $house_id);
 $user = new user($conn, $username, $password, false, $timeout, NULL, NULL);
 
-$result = $house->adduser($user, $iv);
+$result = $house->adduser($user, $iv, $token);
 if ($result['success']) {
     http_response_code(200);
     echo json_encode(array("message" => $result['message']));

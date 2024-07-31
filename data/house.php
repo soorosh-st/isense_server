@@ -265,19 +265,27 @@ class house
     }
 
 
-    public function adduser($user, $iv)
+    public function adduser($user, $iv, $token)
     {
+        $admin_id = $user->checkToken($token);
 
         $user_id = -1;
         if (!$user_id = $user->signup($iv)) {
             return array("success" => false, "message" => "Failed to create user");
         }
 
+        $log = new Log($this->conn, "user with id: {$user_id} just created.", $admin_id, "LOW");
+        $log->create();
+
         // Insert the relationship into join_user_house table
         $stmt = $this->conn->prepare("INSERT INTO join_user_house (user_id, house_id) VALUES (?, ?)");
         $stmt->bind_param("ii", $user_id, $this->house_id);
 
+
+
         if ($stmt->execute()) {
+            $log = new Log($this->conn, "user with id: {$user_id} added to house", $admin_id, "LOW");
+            $log->create();
             return array("success" => true, "message" => "User added to the house successfully");
         } else {
             return array("success" => false, "message" => "Failed to add user to the house");

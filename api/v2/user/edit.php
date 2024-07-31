@@ -38,7 +38,7 @@ if (!$user_id) {
 
 $user = new user($conn, NULL, $password, false, $timeout, NULL, $user_id);
 
-$result = $user->updateuser($iv);
+$result = $user->updateuser($iv, $token);
 if ($result['success']) {
     http_response_code(200);
     echo json_encode(array("message" => $result['message']));
