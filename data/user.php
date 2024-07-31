@@ -209,7 +209,7 @@ class user
         }
     }
 
-    public function signup()
+    public function signup($iv)
     {
         $success = true;
         $accessTimeout = NULL;
@@ -218,7 +218,7 @@ class user
         if ($this->hasUser($this->username)) {
             return false;
         }
-
+        $this->password = $this->decryptAES($this->password, $iv);
         $hashedPassword = password_hash($this->password, PASSWORD_BCRYPT, ['cost' => 11]);
 
         if ($this->timeout == -1) {

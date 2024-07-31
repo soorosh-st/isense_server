@@ -265,11 +265,11 @@ class house
     }
 
 
-    public function adduser($user)
+    public function adduser($user, $iv)
     {
 
         $user_id = -1;
-        if (!$user_id = $user->signup()) {
+        if (!$user_id = $user->signup($iv)) {
             return array("success" => false, "message" => "Failed to create user");
         }
 
