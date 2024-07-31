@@ -35,6 +35,42 @@ class smartKey implements JsonSerializable
         }
         return $house->getHouseSmartKey();
     }
+    public function updateKey($conn, $poles)
+    {
+
+
+
+        $stmt = $conn->prepare("UPDATE smartkey SET active_color = ?, deactive_color = ? WHERE key_id = ?");
+        $stmt->bind_param("ssi", $this->active_color, $this->deactive_color, $this->key_id);
+        $stmt->execute();
+
+        // Check if the update was successful
+        if ($stmt->affected_rows == 0) {
+            $stmt->close();
+            return false;
+        }
+        $stmt->close();
+
+        // Update poles information
+        foreach ($poles as $pole) {
+            $pole_id = $pole->pole_id;
+            $pole_img = $pole->pole_img;
+            $pole_name = $pole->pole_name;
+
+            $stmt_pole = $conn->prepare("UPDATE keypole SET pole_img = ?, pole_displayname = ? WHERE pole_id = ? AND key_id = ?");
+            $stmt_pole->bind_param("ssii", $pole_img, $pole_name, $pole_id, $this->key_id);
+            $stmt_pole->execute();
+
+            // Check if the update was successful for each pole
+            if ($stmt_pole->affected_rows == 0) {
+                $stmt_pole->close();
+                return false;
+            }
+            $stmt_pole->close();
+        }
+
+        return true;
+    }
 
     function setKey($house_id, $key, $conn, $pole_id)
     {
