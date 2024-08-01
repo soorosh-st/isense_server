@@ -35,7 +35,7 @@ if ($group_name == 'All') {
     http_response_code(200);
 } else if (ctype_digit($group_name)) {
     $result = $group->readSingle();
-    echo json_encode(array("Smartkeys" => $result));
+    echo json_encode($result);
     http_response_code(200);
 } else if ($group_name == 'Top') {
     $result = $group->readTop();

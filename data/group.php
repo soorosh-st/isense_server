@@ -209,11 +209,13 @@ class group
 
 
         $stmt->close();
-        $stmt = $this->conn->prepare("SELECT clicks FROM room WHERE room_id = ?  ");
+        $stmt = $this->conn->prepare("SELECT clicks, title  FROM room WHERE room_id = ?  ");
         $stmt->bind_param("i", $this->room_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        $clicks = $result->fetch_assoc()['clicks'];
+        $row = $result->fetch_assoc();
+        $title = $row['title'];
+        $clicks = $row['clicks'];
         $stmt->close();
 
         $clicks += 1;
@@ -223,6 +225,6 @@ class group
         $stmt->close();
 
 
-        return $smartkeys;
+        return ["Group" => $title, "Smartkeys" => $smartkeys];
     }
 }
