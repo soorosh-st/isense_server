@@ -9,19 +9,17 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/init.php';
 
 $data = json_decode(file_get_contents("php://input"));
 
-$id = $data->id;
-
-
+$id = $data->house_id;
 
 $arrayOfscenario = [];
 foreach ($data->scenarios as $item) {
     $isActive = isset($item->isActive) ? $item->isActive : false;
     $scenarioObject = new scenario(
         NULL,
-        $item->key,
-        $item->name,
+        $item->Code,
+        $item->Title,
         NULL,
-        $item->delay
+        NULL
 
     );
     $arrayOfscenario[] = $scenarioObject;

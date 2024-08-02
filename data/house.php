@@ -35,13 +35,12 @@ class house
 
                 $scenarioName = $scenario->getName();
                 $scenarioCode = $scenario->getKey();
-                $scenarioImg = $scenario->src; // Assuming this is to be provided or can be set to a default value
-                $scenarioDelay = $scenario->delay; // Assuming this is to be provided or can be set to a default value
+                $scenarioDelay = 40; // Assuming this is to be provided or can be set to a default value
                 $houseId = $this->house_id;
 
 
                 $stmt->bind_param(
-                    "ssis",
+                    "ssii",
                     $scenarioName,
                     $scenarioCode,
                     $scenarioDelay,
