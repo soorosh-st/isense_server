@@ -56,9 +56,15 @@ class smartKey implements JsonSerializable
             $stmt_pole = $conn->prepare("UPDATE keypole SET pole_img = ?, pole_displayname = ? WHERE pole_id = ? AND key_id = ?");
             $stmt_pole->bind_param("ssii", $pole_img, $pole_name, $pole_id, $this->key_id);
             $stmt_pole->execute();
+            $stmt_pole->store_result();
 
             // Check if the update was successful for each pole
-
+            if ($stmt_pole->affected_rows == 0) {
+                echo "hhhh";
+                $stmt_pole->close();
+                return false;
+            }
+            $stmt_pole->close();
         }
 
         return true;
