@@ -20,13 +20,7 @@ $user = new user($conn, $username, $password, NULL, NULL, NULL, NULL);
 if ($result = $user->signin($iv)) {
     http_response_code(200);
     echo json_encode(
-        array(
-            "message" => $result['message'],
-            "token" => $result['token'],
-            "isManager" => $result['isManager'],
-            "houses" => $result['houses']
-
-        )
+        $result
     );
 } else {
     http_response_code(403);
