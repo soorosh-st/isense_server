@@ -55,7 +55,7 @@ class smartKey implements JsonSerializable
         foreach ($poles as $pole) {
             $pole_id = $pole->pole_id;
             $pole_img = $pole->pole_img;
-            $pole_name = $pole->pole_name;
+            $pole_name = $pole->pole_displayname;
 
             $stmt_pole = $conn->prepare("UPDATE keypole SET pole_img = ?, pole_displayname = ? WHERE pole_id = ? AND key_id = ?");
             $stmt_pole->bind_param("ssii", $pole_img, $pole_name, $pole_id, $this->key_id);
