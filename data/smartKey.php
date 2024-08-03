@@ -58,11 +58,7 @@ class smartKey implements JsonSerializable
             $stmt_pole->execute();
 
             // Check if the update was successful for each pole
-            if ($stmt_pole->affected_rows == 0) {
-                $stmt_pole->close();
-                return false;
-            }
-            $stmt_pole->close();
+
         }
 
         return true;
