@@ -310,19 +310,23 @@ class user
                 $success = false;
                 //echo "hi2";
             }
+            $stmt->close();
+            $stmt = $this->conn->prepare("UPDATE user SET lastLogin = now() WHERE user_name = ?");
+            $stmt->bind_param("s", $this->username);
+
+            $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
+            $log->create();
+
+            $stmt->execute();
+
+
         } else {
             //echo "hi4";
             $success = false;
         }
 
-        $stmt->close();
-        $stmt = $this->conn->prepare("UPDATE user SET lastLogin = now() WHERE user_name = ?");
-        $stmt->bind_param("s", $this->username);
 
-        $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
-        $log->create();
 
-        $stmt->execute();
         return $success;
     }
     private function hasUser($username)
