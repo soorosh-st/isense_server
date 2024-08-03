@@ -21,13 +21,13 @@ class group
     }
     public function create()
     {
-        $stmt = $this->conn->prepare("INSERT INTO room (title,  house_id, database_status,clicks) VALUES (?, ?, ?, ?,?)");
+        $stmt = $this->conn->prepare("INSERT INTO room (title,  house_id, database_status,clicks) VALUES (?, ?, ?, ?)");
         if (!$stmt) {
 
             return false;
         }
         $randomNumber = rand(0, 7);
-        $database_status = "Available";  // Example default value
+        $database_status = "Available"; 
         $stmt->bind_param("sssi", $this->title, $this->house_id, $database_status, $randomNumber);
 
         if ($stmt->execute()) {
