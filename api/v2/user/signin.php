@@ -18,13 +18,11 @@ if (!$username || !$password) {
 
 $user = new user($conn, $username, $password, NULL, NULL, NULL, NULL);
 if ($result = $user->signin($iv)) {
-    http_response_code(200);
+    http_response_code($result['code']);
     echo json_encode(
-        $result
+        $result['result']
     );
-} else {
-    http_response_code(403);
-    echo json_encode(array("Message" => "Cant login with provided information"));
+
 }
 
 

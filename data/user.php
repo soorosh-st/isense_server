@@ -56,7 +56,8 @@ class user
                 if (!$row['isManager'] && $row['access_timeout'] < $currentTime && !$row['noTimeLimit']) {
 
                     return [
-                        "message" => "You are not allowed to log in",
+                        "code" => 403,
+                        "result" => ["message" => "Username or password is invalid"]
 
                     ];
                 }
@@ -68,19 +69,24 @@ class user
                 $log->create();
 
                 return [
-                    "message" => "Success",
-                    "token" => $this->token,
-                    "username" => $this->username,
-                    "isManager" => $this->isManager,
-                    "id" => $id,
-                    "houses" => $houses
+                    "code" => 404,
+                    "result" => [
+                        "message" => "Success",
+                        "token" => $this->token,
+                        "username" => $this->username,
+                        "isManager" => $this->isManager,
+                        "id" => $id,
+                        "houses" => $houses
+                    ]
+
                 ];
             }
         }
         $stmt->close();
         $this->conn->close();
         return [
-            "message" => "Username or password is invalid",
+            "code" => 404,
+            "result" => ["message" => "Username or password is invalid"]
 
         ];
     }
