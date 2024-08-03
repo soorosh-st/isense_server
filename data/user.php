@@ -69,7 +69,7 @@ class user
                 $log->create();
 
                 return [
-                    "code" => 404,
+                    "code" => 200,
                     "result" => [
                         "message" => "Success",
                         "token" => $this->token,
