@@ -21,7 +21,7 @@ if ($result = $user->signin($iv)) {
     http_response_code(200);
     echo json_encode(
         array(
-            "message" => "Success",
+            "message" => $result['message'],
             "token" => $result['token'],
             "isManager" => $result['isManager'],
             "houses" => $result['houses']
