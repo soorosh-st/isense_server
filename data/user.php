@@ -55,7 +55,10 @@ class user
                 $currentTime = time();
                 if (!$row['isManager'] && $row['access_timeout'] < $currentTime && !$row['noTimeLimit']) {
 
-                    return false;
+                    return [
+                        "message" => "You are not allowed to log in",
+
+                    ];
                 }
 
                 $this->createToken();
@@ -65,6 +68,7 @@ class user
                 $log->create();
 
                 return [
+                    "message" => "Success",
                     "token" => $this->token,
                     "username" => $this->username,
                     "isManager" => $this->isManager,
@@ -75,7 +79,10 @@ class user
         }
         $stmt->close();
         $this->conn->close();
-        return false;
+        return [
+            "message" => "Username or password is invalid",
+
+        ];
     }
     public function readAllUser($house_id)
     {
