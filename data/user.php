@@ -37,7 +37,7 @@ class user
 
         $this->password = $this->decryptAES($this->password, $iv);
 
-        $stmt = $this->conn->prepare("SELECT isManager,user_name, user_password,user_id FROM user WHERE user_name = ? AND database_status = 'Available'");
+        $stmt = $this->conn->prepare("SELECT isManager,user_name, user_password,user_id , access_timeout,noTimeLimit FROM user WHERE user_name = ? AND database_status = 'Available'");
         $stmt->bind_param("s", $this->username);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -51,6 +51,12 @@ class user
                 $this->username = $row['user_name'];
                 $this->isManager = $row['isManager'];
                 $id = $row['user_id'];
+
+                $currentTime = time();
+                if (!$row['isManager'] && $row['access_timeout'] < $currentTime && !$row['noTimeLimit']) {
+
+                    return false;
+                }
 
                 $this->createToken();
                 $houses = $this->getHousesByUserId($id);
@@ -294,7 +300,7 @@ class user
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
-            // echo "hi";
+
             $row = $result->fetch_assoc();
             $isManager = $row['isManager'];
             $accessTimeout = strtotime($row['access_timeout']);
@@ -303,12 +309,12 @@ class user
             $id = $row['user_id'];
             $currentTime = time();
             if (!$isManager && $accessTimeout < $currentTime && !$noTimeLimit) {
-                //echo "hi3";
+
                 $success = false;
             }
             if ($tokenTimeout < $currentTime) {
                 $success = false;
-                //echo "hi2";
+
             }
             $stmt->close();
             $stmt = $this->conn->prepare("UPDATE user SET lastLogin = now() WHERE user_name = ?");
@@ -321,7 +327,7 @@ class user
 
 
         } else {
-            //echo "hi4";
+
             $success = false;
         }
 
