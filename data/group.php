@@ -162,7 +162,7 @@ class group
         $stmt->close();
         $count = $this->getSmartKeyCount($this->conn, $this->house_id);
 
-        return array("All_device_count" => $count, "groups" => $rooms);
+        return $rooms;
     }
 
 

@@ -270,8 +270,9 @@ class user
             $accessTimeout = $this->timeout;
         }
 
-        $stmt = $this->conn->prepare("INSERT INTO user (user_name, user_password, isManager, access_timeout, noTimeLimit) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $this->username, $hashedPassword, $this->isManager, $accessTimeout, $noTimeLimit);
+        $stmt = $this->conn->prepare("INSERT INTO user (user_name, user_password, isManager, access_timeout, noTimeLimit,database_status) VALUES (?, ?, ?, ?, ?,?)");
+        $status = "Available";
+        $stmt->bind_param("ssssss", $this->username, $hashedPassword, $this->isManager, $accessTimeout, $noTimeLimit, $status);
 
 
 

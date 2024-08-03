@@ -37,8 +37,6 @@ class house
                 $scenarioCode = $scenario->getKey();
                 $scenarioDelay = 40; // Assuming this is to be provided or can be set to a default value
                 $houseId = $this->house_id;
-
-
                 $stmt->bind_param(
                     "ssii",
                     $scenarioName,
