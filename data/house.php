@@ -133,7 +133,8 @@ class house
                 $user_list[] = $row;
             }
         }
-        return $user_list;
+        $status = ($result->num_rows != 0);
+        return ["status" => $status, "List" => $user_list];
     }
 
 

@@ -34,9 +34,9 @@ if (!$house_id) {
 
 
 $user = new user($conn, NULL, NULL, NULL, NULL, $token, NULL);
-
-if ($response = $user->readAlluser($house_id)) {
-    echo json_encode($response);
+$response = $user->readAlluser($house_id);
+if ($response['status']) {
+    echo json_encode($response['List']);
     http_response_code(200);
 } else {
     echo json_encode(array("message" => "Data could not be retrived"));
