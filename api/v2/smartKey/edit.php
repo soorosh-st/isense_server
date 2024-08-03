@@ -41,6 +41,6 @@ if ($response = $key->updateKey($conn, $poles)) {
     echo json_encode(array("Message" => "Command sent successfully"));
     http_response_code(200);
 } else {
-    echo json_encode(array("Message" => "Could set changes to key"));
+    echo json_encode(array("Message" => "Could not set changes to key"));
     http_response_code(501);
 }
