@@ -63,7 +63,7 @@ class user
                 }
 
                 $this->createToken();
-                $houses = $this->getHousesByUserId($id);
+
 
                 $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
                 $log->create();
@@ -76,7 +76,6 @@ class user
                         "username" => $this->username,
                         "isManager" => $this->isManager,
                         "id" => $id,
-                        "houses" => $houses
                     ]
 
                 ];
@@ -157,6 +156,44 @@ class user
         } else {
             return array("success" => false, "message" => "Failed to remove user from the house", "code" => 500);
         }
+    }
+
+    public function getHouses()
+    {
+        $stmt = $this->conn->prepare("SELECT user_id , isManager FROM user WHERE user_token = ?");
+        $stmt->bind_param("i", $this->token);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            if ($row['isManager'] != 1) {
+                return [
+                    "code" => 401,
+                    "result" => [
+                        "message" => "User is not an admin",
+                    ]
+                ];
+            }
+        } else {
+            return [
+                "code" => 404,
+                "result" => [
+                    "message" => "User not found",
+                ]
+            ];
+        }
+        $admin_id = $row['user_id'];
+        $house = $this->getHousesByUserId($admin_id);
+
+
+        return [
+            "code" => 200,
+            "result" => [
+                "message" => "Success",
+                "Houses" => $house,
+            ]
+        ];
     }
 
     private function getHousesByUserId($user_id)
@@ -333,8 +370,8 @@ class user
             $stmt = $this->conn->prepare("UPDATE user SET lastLogin = now() WHERE user_name = ?");
             $stmt->bind_param("s", $this->username);
 
-            $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
-            $log->create();
+            //$log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
+            //$log->create();
 
             $stmt->execute();
 
