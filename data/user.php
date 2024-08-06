@@ -210,22 +210,21 @@ class user
 
         $houses = array();
         while ($row = $result->fetch_assoc()) {
+            $iv = $this->generateIV();
+            $row['house_id'] = $this->encryptAES($row['house_id'], $iv);
+            $row['iv'] = $iv;
             $houses[] = $row;
         }
 
         $stmt->close();
         return $houses;
     }
-
-    private function decryptAES($data, $iv)
+    private function generateIV()
     {
-        $key = "feUGSmdz4ih/vxOxOZg506eOnfOgSUP1AHmrCqT8ayg=";
-        $decodedKey = base64_decode($key);
-        $decodedIV = base64_decode($iv);
-        $decodedEncryptedData = base64_decode($data);
-        return openssl_decrypt($decodedEncryptedData, 'aes-256-cbc', $decodedKey, OPENSSL_RAW_DATA, $decodedIV);
+        $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+        $iv = openssl_random_pseudo_bytes($ivLength);
+        return base64_encode($iv);
     }
-
     private function encryptAES($data, $iv)
     {
         $key = "feUGSmdz4ih/vxOxOZg506eOnfOgSUP1AHmrCqT8ayg=";
@@ -238,6 +237,16 @@ class user
 
         return base64_encode($encryptedData);
     }
+    private function decryptAES($data, $iv)
+    {
+        $key = "feUGSmdz4ih/vxOxOZg506eOnfOgSUP1AHmrCqT8ayg=";
+        $decodedKey = base64_decode($key);
+        $decodedIV = base64_decode($iv);
+        $decodedEncryptedData = base64_decode($data);
+        return openssl_decrypt($decodedEncryptedData, 'aes-256-cbc', $decodedKey, OPENSSL_RAW_DATA, $decodedIV);
+    }
+
+
 
     public function checkToken($token)
     {
