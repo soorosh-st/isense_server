@@ -24,7 +24,7 @@ class house
         foreach ($arrayOfScenario as $scenario) {
 
             $id = $scenario->getKey();
-            $stmt_check = $this->conn->prepare("SELECT scenario_id FROM scenario WHERE scenario_code = ? AND house_id=?");
+            $stmt_check = $this->conn->prepare("SELECT * FROM scenario WHERE scenario_code = ? AND house_id=?");
             $stmt_check->bind_param("ss", $id, $this->house_id);
             $stmt_check->execute();
             $result = $stmt_check->get_result();
