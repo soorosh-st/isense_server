@@ -20,17 +20,17 @@ class house
 
     public function addScenario($arrayOfScenario)
     {
-        $lastInsertedIds = [];
-        foreach ($arrayOfScenario as $scenario) {
-            $scenarioId = NULL;
-            $id = $scenario->getKey();
-            $stmt_check = $this->conn->prepare("SELECT scenario_id FROM scenario WHERE scenario_code = ?");
-            $stmt_check->bind_param("s", $id);
-            $stmt_check->execute();
-            $stmt_check->store_result();
-            $stmt_check->bind_result($scenarioId);
 
-            if ($stmt_check->num_rows == 0) {
+        foreach ($arrayOfScenario as $scenario) {
+
+            $id = $scenario->getKey();
+            $stmt_check = $this->conn->prepare("SELECT scenario_id FROM scenario WHERE scenario_code = ? AND house_id=?");
+            $stmt_check->bind_param("ss", $id, $this->house_id);
+            $stmt_check->execute();
+            $result = $stmt_check->get_result();
+
+            if ($result->num_rows == 0) {
+                //echo "here";
                 $stmt = $this->conn->prepare("INSERT INTO scenario (scenario_name, scenario_code,  scenario_delay, house_id) VALUES (?, ?,  ?, ?)");
 
                 $scenarioName = $scenario->getName();
