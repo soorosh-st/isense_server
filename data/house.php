@@ -28,7 +28,7 @@ class house
             $stmt_check->bind_param("ss", $id, $this->house_id);
             $stmt_check->execute();
             $result = $stmt_check->get_result();
-            echo $result->num_rows;
+            //echo $result->num_rows;
             if ($result->num_rows == 0) {
                 //echo "here";
                 $stmt = $this->conn->prepare("INSERT INTO scenario (scenario_name, scenario_code,  scenario_delay, house_id) VALUES (?, ?,  ?, ?)");
