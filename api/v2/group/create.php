@@ -29,9 +29,9 @@ $house_id = filter_var($data->house_id, FILTER_SANITIZE_STRING);
 // }
 
 $group = new group(NULL, $title, NULL, $house_id, $conn);
-if ($group->create()) {
+if ($result = $group->create()) {
     http_response_code(200);
-    echo json_encode(["message" => "Room created successfully"]);
+    echo json_encode(["message" => "Room created successfully", "id" => $result]);
 } else {
     http_response_code(500);
     echo json_encode(["message" => "Failed to create room"]);

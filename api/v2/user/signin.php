@@ -22,7 +22,6 @@ if ($result = $user->signin($iv)) {
     echo json_encode(
         $result['result']
     );
-
 }
 
 

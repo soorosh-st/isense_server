@@ -171,7 +171,7 @@ class house
         $scenarios = [];
         while ($row = $result->fetch_assoc()) {
             // Modify scenario_img based on theme
-            $row['scenario_img'] .= ".svg";
+            // $row['scenario_img'] .= ".svg";
             $scenarios[] = $row;
         }
         $stmt->close();
@@ -185,7 +185,7 @@ class house
 
             while (($row = $result->fetch_assoc())) {
                 // Modify scenario_img based on theme
-                $row['scenario_img'] .= ".svg";
+                // $row['scenario_img'] .= ".svg";
                 $scenarios[] = $row;
 
             }
@@ -499,7 +499,6 @@ class house
         $success = $stmt->execute();
         $stmt->close();
         $this->conn->close();
-
         if ($success) {
             return true;
         } else {

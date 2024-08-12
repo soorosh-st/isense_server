@@ -27,13 +27,13 @@ class group
             return false;
         }
         $randomNumber = rand(0, 7);
-        $database_status = "Available"; 
+        $database_status = "Available";
         $stmt->bind_param("sssi", $this->title, $this->house_id, $database_status, $randomNumber);
 
         if ($stmt->execute()) {
-
-            return true;
-        }
+            return $this->conn->insert_id;
+        } else
+            return -1;
 
 
     }
