@@ -82,8 +82,15 @@ class group
 
             // Prepare statement for inserting device into the room
             if ($device->type == "Key") {
+                $stmt = $this->conn->prepare("SELECT key_id FROM smartkey WHERE key_uid = ? ");
+                $stmt->bind_param("i", $key_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $row = $result->fetch_assoc();
+                $keyID = $row['key_id'];
+
                 $stmt = $this->conn->prepare("INSERT INTO join_room_smartkey (room_id, key_id) VALUES (?, ?)");
-                $stmt->bind_param("ii", $this->room_id, $key_id);
+                $stmt->bind_param("ii", $this->room_id, $keyID);
             } elseif ($device->type == "Relay") {
                 // Add logic for Relay devices if needed
                 continue; // Example: $stmt = $this->conn->prepare("INSERT INTO join_room_relay (room_id, relay_id) VALUES (?, ?)");
