@@ -160,11 +160,73 @@ class group
         }
 
         $stmt->close();
-        $count = $this->getSmartKeyCount($this->conn, $this->house_id);
+
 
         return $rooms;
     }
+    public function readAllPanel()
+    {
+        // SQL query to select all rooms and associated smart keys for a specific house
+        $query = "
+        SELECT 
+            r.room_id, 
+            r.title, 
+            r.count,
+            sk.key_id, 
+            sk.key_uid
+            
+        FROM 
+            room r
+        LEFT JOIN 
+        join_room_smartkey rs ON r.room_id = rs.room_id 
+        LEFT JOIN 
+            smartkey sk ON rs.key_id = sk.key_id
+        WHERE 
+            r.house_id = ?
+    ";
 
+        // Prepare the query
+        $stmt = $this->conn->prepare($query);
+
+        // Bind the house_id parameter
+        $stmt->bind_param('i', $this->house_id);
+
+        // Execute the query
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        // Initialize an array to hold the rooms and their smart keys
+        $rooms = [];
+
+        // Process the results
+        while ($row = $result->fetch_assoc()) {
+            $roomId = $row['room_id'];
+
+            // If this room has not been added to the $rooms array yet, add it
+            if (!isset($rooms[$roomId])) {
+                $rooms[$roomId] = [
+                    'room_id' => $row['room_id'],
+                    'title' => $row['title'],
+                    'count' => $row['count'],
+                    'devices' => []
+                ];
+            }
+
+            // Add smart key information to the current room
+            if ($row['key_id']) {
+                $rooms[$roomId]['devices'][] = [
+
+                    'key_uid' => $row['key_uid'],
+
+                ];
+            }
+        }
+
+        $stmt->close();
+
+        // Return the rooms as an indexed array (to remove numeric keys)
+        return array_values($rooms);
+    }
 
 
 
