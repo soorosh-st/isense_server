@@ -9,26 +9,10 @@ $devices = $data->devices;
 $group_id = filter_var($data->group_id, FILTER_SANITIZE_STRING);
 $group_name = filter_var($data->group_name, FILTER_SANITIZE_STRING);
 
-$token;
-$headers = getallheaders();
-if ($headers['Authorization']) {
-
-    $authHeader = $headers['Authorization'];
-    list($type, $token) = explode(' ', $authHeader);
-    if ($type != 'Bearer') {
-        http_response_code(401);
-        echo json_encode(['Message' => 'Invalid token']);
-        die();
-    }
-} else {
-    // Missing token
-    http_response_code(401);
-    echo json_encode(['Message' => 'Missing token']);
-    die();
-}
 
 
-$group = new group($group_id, $group_name, NULL, $NULL, $conn);
+
+$group = new group($group_id, $group_name, NULL, NULL, $conn);
 if ($group->import($devices)) {
     http_response_code(200);
     echo json_encode(["message" => "Devices added successfully"]);
