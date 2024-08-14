@@ -183,6 +183,7 @@ class user
                 ]
             ];
         }
+
         $admin_id = $row['user_id'];
         $house = $this->getHousesByUserId($admin_id);
 
@@ -211,13 +212,34 @@ class user
         $houses = array();
         while ($row = $result->fetch_assoc()) {
             $iv = $this->generateIV();
-            $row['house_id'] = $this->encryptAES($row['house_id'], $iv);
+            $house_id = $row['house_id'];
+            $userCount = $this->getUserCountInTheHouse($house_id);
+            $row['house_id'] = $this->encryptAES($house_id, $iv);
             $row['iv'] = $iv;
+            $row['userCount'] = $userCount;
             $houses[] = $row;
         }
 
         $stmt->close();
         return $houses;
+    }
+    private function getUserCountInTheHouse($house_id)
+    {
+        $stmt = $this->conn->prepare("SELECT COUNT(*) AS count FROM join_user_house WHERE house_id = ? ");
+        $stmt->bind_param("s", $house_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            return false;
+        }
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+        $stmt->close();
+        return $count;
     }
     private function generateIV()
     {
