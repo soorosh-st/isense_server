@@ -79,7 +79,7 @@ class user
                             "isManager" => $this->isManager,
                             //"id" => $id,
                             "house" => [
-                                "id" => $this->encryptAES($houses[0]['house_id'], $iv),
+                                "house_id" => $this->encryptAES($houses[0]['house_id'], $iv),
                                 "iv" => $iv
                             ]
                         ],
