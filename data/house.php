@@ -346,12 +346,13 @@ class house
             $stmt->bind_param("s", $this->house_id);
             $stmt->execute();
         }
-        $stmt = $this->conn->prepare("SELECT key_uid, key_status, active_color, deactive_color FROM smartkey WHERE house_id = ? AND newCommand = 1");
+        $stmt = $this->conn->prepare("SELECT key_uid, key_status, active_color, deactive_color,hasColor FROM smartkey WHERE house_id = ? AND newCommand = 1");
         $stmt->bind_param("s", $this->house_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
         while ($row = $result->fetch_assoc()) {
+
             $response['devices'][] = $row;
         }
 

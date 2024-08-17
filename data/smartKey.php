@@ -40,8 +40,9 @@ class smartKey implements JsonSerializable
 
 
 
-        $stmt = $conn->prepare("UPDATE smartkey SET active_color = ?, deactive_color = ? WHERE key_id = ?");
-        $stmt->bind_param("ssi", $this->active_color, $this->deactive_color, $this->key_id);
+        $stmt = $conn->prepare("UPDATE smartkey SET active_color = ?, deactive_color = ?, hasColor= ? WHERE key_id = ?");
+        $hasColor = 1;
+        $stmt->bind_param("ssii", $this->active_color, $this->deactive_color, $hasColor, $this->key_id);
         $stmt->execute();
 
         // Check if the update was successful
