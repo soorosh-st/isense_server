@@ -327,7 +327,7 @@ class house
 
                     $stmt_pole = $this->conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_name=?");
                     $stmt_pole->bind_param("iis", $poleStatus, $key_id, $poleIndex);
-                    echo $key_id . "  " . $poleStatus . "   " . $poleIndex . " ";
+                    //echo $key_id . "  " . $poleStatus . "   " . $poleIndex . " ";
 
                     $stmt_pole->execute();
                     $stmt_pole->close();
