@@ -68,7 +68,7 @@ class user
                 $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
                 $log->create();
                 $houses = $this->getHousesByUserId($id);
-                $iv = $this->generateIV();
+
                 return [
                     "code" => 200,
                     "result" => [
@@ -79,8 +79,8 @@ class user
                             "isManager" => $this->isManager,
                             //"id" => $id,
                             "house" => [
-                                "house_id" => $this->encryptAES($houses[0]['house_id'], $iv),
-                                "iv" => $iv
+                                "house_id" => $houses[0]['house_id'],
+                                "iv" => $houses[0]['iv']
                             ]
                         ],
 
@@ -260,11 +260,7 @@ class user
         $key = "feUGSmdz4ih/vxOxOZg506eOnfOgSUP1AHmrCqT8ayg=";
         $decodedKey = base64_decode($key);
         $decodedIV = base64_decode($iv);
-
-
         $encryptedData = openssl_encrypt($data, 'aes-256-cbc', $decodedKey, OPENSSL_RAW_DATA, $decodedIV);
-
-
         return base64_encode($encryptedData);
     }
     private function decryptAES($data, $iv)
