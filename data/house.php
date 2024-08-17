@@ -300,9 +300,11 @@ class house
             $stmt_check = $this->conn->prepare("SELECT key_id FROM smartkey WHERE key_uid = ?");
             $stmt_check->bind_param("s", $id);
             $stmt_check->execute();
-            $stmt_check->store_result();
+            //$stmt_check->store_result();
+            $result = $stmt_check->get_result();
+            $key_id = $result->fetch_assoc()['key_id'];
 
-            if ($stmt_check->num_rows > 0) {
+            if ($result->num_rows > 0) {
                 // Update the smart key status
                 $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?, newCommand=? WHERE key_uid = ?");
                 $keyStatus = $smartKey->getKeyStatus();
@@ -324,8 +326,8 @@ class house
                     $poleIndex = $i + 1; // Pole index starts from 1
 
                     $stmt_pole = $this->conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_name=?");
-                    $stmt_pole->bind_param("iis", $poleStatus, $id, $poleIndex);
-                    echo $id . "  " . $poleStatus . "   " . $poleIndex;
+                    $stmt_pole->bind_param("iis", $poleStatus, $key_id, $poleIndex);
+                    echo $key_id . "  " . $poleStatus . "   " . $poleIndex . " ";
 
                     $stmt_pole->execute();
                     $stmt_pole->close();
