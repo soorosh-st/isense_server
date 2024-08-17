@@ -323,7 +323,7 @@ class house
                     $poleStatus = $keyStatus[$i] == '1' ? 1 : 0; // Convert '1'/'0' to boolean 1/0
                     $poleIndex = $i + 1; // Pole index starts from 1
 
-                    $stmt_pole = $this->conn->prepare("UPDATE pole SET pole_status=? WHERE key_id=? AND pole_name=?");
+                    $stmt_pole = $this->conn->prepare("UPDATE keypole SET pole_status=? WHERE key_id=? AND pole_name=?");
                     $stmt_pole->bind_param("iis", $poleStatus, $id, $poleIndex);
                     $stmt_pole->execute();
                     $stmt_pole->close();
