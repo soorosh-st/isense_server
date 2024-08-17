@@ -295,13 +295,16 @@ class house
     {
         foreach ($arrayOfSmartKeys as $smartKey) {
             $id = $smartKey->getKeyId();
+
+            // Check if the smart key exists
             $stmt_check = $this->conn->prepare("SELECT key_id FROM smartkey WHERE key_uid = ?");
             $stmt_check->bind_param("s", $id);
             $stmt_check->execute();
             $stmt_check->store_result();
 
             if ($stmt_check->num_rows > 0) {
-                $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?,newCommand=? WHERE key_uid = ?");
+                // Update the smart key status
+                $stmt = $this->conn->prepare("UPDATE smartkey SET key_status=?, newCommand=? WHERE key_uid = ?");
                 $keyStatus = $smartKey->getKeyStatus();
                 $newCommand = 0;
 
@@ -313,9 +316,22 @@ class house
                 );
                 $stmt->execute();
                 $stmt->close();
-            }
-        }
 
+                // Update the poles associated with this smart key
+                // Assuming poles are associated with smart key by key_id in pole table
+                for ($i = 0; $i < strlen($keyStatus); $i++) {
+                    $poleStatus = $keyStatus[$i] == '1' ? 1 : 0; // Convert '1'/'0' to boolean 1/0
+                    $poleIndex = $i + 1; // Pole index starts from 1
+
+                    $stmt_pole = $this->conn->prepare("UPDATE pole SET pole_status=? WHERE key_id=? AND pole_id=?");
+                    $stmt_pole->bind_param("iis", $poleStatus, $id, $poleIndex);
+                    $stmt_pole->execute();
+                    $stmt_pole->close();
+                }
+            }
+
+            $stmt_check->close();
+        }
     }
 
     public function getupdates()
@@ -357,6 +373,11 @@ class house
         }
 
         $stmt->close();
+
+
+
+
+
         return $response;
     }
     public function addKey($arrayOfSmartKeys)
