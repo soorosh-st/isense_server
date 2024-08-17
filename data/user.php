@@ -67,15 +67,23 @@ class user
 
                 $log = new Log($this->conn, "user with id: {$id} Logged in", $id, 'LOW');
                 $log->create();
-
+                $houses = $this->getHousesByUserId($id);
+                $iv = $this->generateIV();
                 return [
                     "code" => 200,
                     "result" => [
                         "message" => "Success",
-                        "token" => $this->token,
-                        "username" => $this->username,
-                        "isManager" => $this->isManager,
-                        "id" => $id,
+                        "user" => [
+                            "token" => $this->token,
+                            "username" => $this->username,
+                            "isManager" => $this->isManager,
+                            //"id" => $id,
+                            "house" => [
+                                "id" => $this->encryptAES($houses[0]['house_id'], $iv),
+                                "iv" => $iv
+                            ]
+                        ],
+
                     ]
 
                 ];
