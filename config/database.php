@@ -1,9 +1,9 @@
 <?php
 class database
 {
-    private $hostname = "localhost";
+    private $hostname = "isensedatabase";
     private $username = "root";
-    private $password = "";
+    private $password = "BLdrnljYG5OHRUPEBLo4EtlU";
     private $databasename = "isense";
     private $conn;
 
