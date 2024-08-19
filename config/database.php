@@ -4,7 +4,7 @@ class database
     private $hostname = "isensedatabase";
     private $username = "root";
     private $password = "BLdrnljYG5OHRUPEBLo4EtlU";
-    private $databasename = "isense";
+    private $databasename = "iseir_api_server_db";
     private $port = 3306;
     private $conn;
 
