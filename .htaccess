@@ -1,17 +1,17 @@
 AddType application/x-httpd-php .php
+add_header Access-Control-Allow-Origin *;
+
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Headers: "customKey1,customKey2, headers, Origin, X-Requested-With, Content-Type,Accept,
+Authorization"
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.php -f
     RewriteRule ^(.*)$ $1.php [L]
 </IfModule>
-<FilesMatch "\.(html|htm|js|css)$">
-    FileETag None
-    <IfModule mod_headers.c>
-        Header unset ETag
-        Header set Cache-Control "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
-        Header set Pragma "no-cache"
-        Header set Expires "Thu, 01 Jan 1970 00:00:00 GMT"
-    </IfModule>
-</FilesMatch>
+
 Options -Indexes
