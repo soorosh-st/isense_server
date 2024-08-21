@@ -11,7 +11,7 @@ $password = filter_var($data->password, FILTER_SANITIZE_STRING);
 $iv = filter_var($data->iv, FILTER_SANITIZE_STRING);
 
 if (!$username || !$password) {
-    http_response_code(400);
+    http_response_code(401);
     echo json_encode(array("Message" => "Not enough information"));
     die();
 }
