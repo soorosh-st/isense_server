@@ -1,6 +1,5 @@
 AddType application/x-httpd-php .php
 
-Authorization"
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
 </IfModule>

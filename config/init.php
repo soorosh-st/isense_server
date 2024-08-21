@@ -4,7 +4,6 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/data/log.php';
 header('Access-Control-Allow-Methods: PUT, GET, POST');
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Origin: https://isense.liara.run");
 header("Access-Control-Allow-Headers: X-Requested-With, Content-Type, Origin, Cache-Control, Pragma, Authorization, Accept, Accept-Encoding");
 try {
     $database = new database();
