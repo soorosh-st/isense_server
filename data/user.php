@@ -422,7 +422,7 @@ class user
     }
     private function hasUser($username)
     {
-        $sql = "SELECT * FROM user WHERE user_name = ? ";
+        $sql = "SELECT * FROM user WHERE user_name = ? AND database_status = 'Available' ";
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param('s', $username);
         $stmt->execute();
