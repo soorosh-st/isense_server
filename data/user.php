@@ -363,7 +363,7 @@ class user
 
         $stmt = $this->conn->prepare("INSERT INTO user (user_name, user_password, isManager, access_timeout, noTimeLimit,database_status) VALUES (?, ?, ?, ?, ?,?)");
         $status = "Available";
-        $stmt->bind_param("ssssss", $this->username, $hashedPassword, $this->isManager, $accessTimeout, $noTimeLimit, $status);
+        $stmt->bind_param("ssisss", $this->username, $hashedPassword, $this->isManager, $accessTimeout, $noTimeLimit, $status);
 
 
 
